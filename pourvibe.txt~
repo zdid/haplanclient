@@ -1,0 +1,86 @@
+je décris ce que je souhaite, mais n'écris aucun fichier avant que je le demande
+nous sommes dans un contexte home assistant
+nous allons creer une application cliente pour le web en typescript.
+L'objectif est d'afficher dans une container dont la dimension peut varier un plan avec des objets qui affichent des données en provenance de home assistant.
+1) voir les services et webservices proposés par l'application server testvibe5 
+2) Le serveur met a dispositions toutes les données qui nous sont necessaires, sauf les descriptions d'objets qui seront connus par cette application cliente. (plan, arborescence (pieces, matériels, entites), une fois tous les states de HA, et ensuite les mises à jours de states.
+
+
+En cas de redimensionnement, Le plan devra toujours respecter son rapport hauteur/largeur. il sera toujours centré sur le conteneur.
+La classe de gestion du container, est chargé de 
+- l'afficher à partir de l'adresse recue dans /api/data
+- de redimensionner le plan en fonction de la dimension du container parent, le plan doit appraitre entièrement avec ses proportions d'origine.
+- de mettre à disposition un container placé sur le plan aux positions occupés par le plan et de la dimension du plan, ce container contiendra des sensors de compositions différentes.
+
+Les sensors, 4 caratéristiques:
+- l'état du sensor, voir le 'state' envoyé puis mise à jour par webservice
+- sa position sur le plan les coordonnées sont des valeurs de 0 a 1 qui permette le calcul de la poisition précise en fonction de la largeur et de la hauteur du plan
+- sa composition à l'écran: il peut être composé d'images et ou de texte (limité en longueur) ou d'un mixe des deux.
+- d'actions possibles a transmettre au serveur au format attendu par home assistant (allumer eteindre une lampe ou monter descendre un store etc...) les actions sont déterminées par un clic sur un des objets qui caracterise l objet a afficher( ex : thermostat = 'icone +' valeur du thermostat 'icone -', le clic sur licone moins entraienra une baisse du thermostat de 0.2 degrés)
+   
+A chaque type desensor (entité ha) sera rattaché la représentation graphique qui le caractérise.
+La représentation graphique est stocké dans le code du client.
+une option de menu apparait dans la surface de la boite d'affichage du plan en haut à gauche.
+
+Une icone menu sera présente dans le coin supérieur gauche de la boite.
+Ce menu propose plusieurs options.
+a) passer en mode paramétrage
+b) upload d'un plan
+c) refresh 
+
+A) le passage en mode paramétrage affichera les options supplémentaires, choix d'une entité et upload de plan.
+ mode paramétrage 
+        a) faire apparaitre une icone de poubelle dans le coin inferieur gauche de la surface occupée par le plan. 
+        b) de déplacer des objets présent sur le plan (drag and drop)
+        c) permet d'accéder au menu choix d'entité (ci dessous)
+        d) de déplacer  un objet présent sur le plan vers la poubelle.  
+    les déplacements sont uniquement  dans la surface du plan et non pas de la boite qui acceuille le plan 
+    (la classe      client/src/ui/draganddropconstrained.ts qui devra etre utilisée)
+    si après 5 secondes aucun autre objet n'est placé ou affiché ou supprimé, l'ensemble des positions des objets triés par entity id sera     transmis au serveur pour sauvegarde.
+
+B) le plan 
+        a) l'url du plan sera transmise par le serveur par la recupération des données initiale. /api/data. 
+        en cas d'absence du plan:
+                - il faut considérer que l'image du plan est une image transparente de la dimension du contaner qui doit acceuillir le plan (tout l'espace disponible). 
+                - on passe en mode directement en mode paramétrage.
+        b) Après un upload du plan, l'ensemble des données doivent être demandées. /api/data
+        c) upload d'un plan: le plan uploadé est stocké et referencé par le serveur
+
+  
+2) choix d'une entité à afficher
+Le choix de l'entité se fera à partir de l'arborescence (area device entity) donnée par le serveur, Les objets de type diagnostique ou config ne seront pas affichés,  les entités non visibles non plus . seuls les objets qui ne sont pas sur le plan seront affichés. Apres selection l'objet correspondant au type d'entité apparaitra au centre du plan et sera donc déplaçable .
+le choix se fait a prtir de 3 combobox qui apparaissent au fur et a mesure.
+- la premiere affiche la liste des areas (pieces) 
+        - si une piece n'a pas de materiels (devices ) elle ne s'affiche pas 
+ 
+- la deuxieme la liste des matériels de la pièce (devices) 
+        - si un device n'a pas d entités (sensors) associés pas d'affichge du device
+        - l affichage est déclenché par le choix d'un area
+        - si il n'y a qu'un seul device il est selectionné par defaut
+- la troisieme affiche la liste des entites (le nom de l'entité a afficher est dans le state correspondant à l'entity_id.
+        - affichage déclenché par le choix d'un matériel par defaut ou par clic.
+ Au cas ou une nouvelle pièce est selectionnée le troisième disparait          
+
+
+4) gestion des objets affichés sur le plan
+l'ensemble des positions par entity_id seront transmises au serveur pour sauvegarde a chaque modification de position, d'ajout ou de suppression avec un declage de 5 secondes si d'autres venaient a etre modifiés cela decalerait d'autant .
+Les positions seront récupérées dans /api/data
+des classes d'objet seront definies, chacune dans un module selon la definitions des sensors donnés plus haut
+les classes s'auto-declareront dans un index des types objet cela doit permettre de rajouter de novelles classes d'objet.
+
+Les objets affichés peuvent être de simple affichage de capteurs comme les temperatures taux d'humidité.. ou des objets qui entrainent des action possibles: allumage extinction de lampes, ou réglages de thermostat, ouverture de volet ou de store .... Un objet pourra comporter aussi bien du texte que des icones ou une combinaison des deux. En fonction de du composant selectionné dans l'objet, les actions seront différentes.
+L'action sera envoyé au serveur immédiatement ou avec un léger décalage selon le type d'objet: par exemple, immédiat pour un on/off, décalé pour réglage de thermostat... 
+les états arrivent par web service et provoque la modification de l'objet affiché.
+en cas d'action sur un des objets la commande sera transmise au serveur sous la forme attendue par homeassistant.
+ecris moi le ou les fichier *.ts coté client. merci de mettre en oeuvre quelque chose de bien structuré.
+
+Les différents types d'objet:
+pour tous les capteurs non déclarés ci dessous, un simple affichage texte avec derrière l'unite de mesure
+lumiere simple: une simple icone d'une lampe allumée ou éteinte, la selection de l'icone provoquera un toogle vers le serveur. 
+pour une lumiere avec brightness: ajout d'icones plus (a droite) et  moins (a gauche) de chaque coté de lampoule.
+pour un volet roulant: au centre un texte qui indique en pourcentage la position du volet, au dessus une fleche vers le haut pour monter le volet, en dessous une flecche vers le bas pour le descendre. Si le volet est en mouvement une pression sur le poucentage provoquera un stop.
+pour les stores idem mais les fleches sont a droite et a gauche.
+thermostat : une icone moins bleue la temperature du thermostat, une icone plus rouge pour monter le thermostat. 
+ 
+5) pour analyser le serveur : analyser les fichiers type script server server/src/ du repertoire ../testvibe5S
+

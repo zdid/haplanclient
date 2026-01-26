@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Démonstration - Entités Améliorées</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        
+        .demo-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        
+        .demo-section h2 {
+            color: #4285F4;
+            margin-top: 0;
+        }
+        
+        .entities-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .entity-card {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .entity-card h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .controls {
+            margin: 15px 0;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+        
+        button {
+            padding: 8px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #4285F4;
+            color: white;
+        }
+        
+        button:hover {
+            background: #3367D6;
+        }
+        
+        .code-block {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        
+        .status {
+            padding: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: inline-block;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+    <!-- Font Awesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="demo-container">
+        <h1>🎨 Démonstration des Entités Améliorées</h1>
+        
+        <div class="demo-section">
+            <h2>💡 Lumière Améliorée</h2>
+            <p>Entité de lumière avec affichage de l'état et de la luminosité</p>
+            
+            <div class="controls">
+                <button onclick="toggleLight()">Basculer État</button>
+                <button onclick="setBrightness(100)">Luminosité 100</button>
+                <button onclick="setBrightness(180)">Luminosité 180</button>
+                <button onclick="setBrightness(255)">Luminosité Max</button>
+            </div>
+            
+            <div class="entities-container" id="light-container">
+                <!-- La lumière sera affichée ici -->
+            </div>
+            
+            <div class="code-block">
+                <strong>Code utilisé :</strong><br>
+                const light = EnhancedObjectFactory.createObject(<br>
+                &nbsp;&nbsp;'light.living_room',<br>
+                &nbsp;&nbsp;'light',<br>
+                &nbsp;&nbsp;{ x: 0.5, y: 0.5 },<br>
+                &nbsp;&nbsp;{ state: 'on', attributes: { brightness: 150 } }<br>
+                );
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>🌡️ Capteur de Température Amélioré</h2>
+            <p>Capteur avec affichage visuel de la température</p>
+            
+            <div class="controls">
+                <button onclick="setTemperature(5)">Température Froide (5°C)</button>
+                <button onclick="setTemperature(22)">Température Normale (22°C)</button>
+                <button onclick="setTemperature(38)">Température Chaude (38°C)</button>
+            </div>
+            
+            <div class="entities-container" id="temp-container">
+                <!-- Le capteur de température sera affiché ici -->
+            </div>
+            
+            <div class="code-block">
+                <strong>Code utilisé :</strong><br>
+                const tempSensor = EnhancedObjectFactory.createObject(<br>
+                &nbsp;&nbsp;'sensor.outside_temperature',<br>
+                &nbsp;&nbsp;'sensor',<br>
+                &nbsp;&nbsp;{ x: 0.5, y: 0.5 },<br>
+                &nbsp;&nbsp;{ state: '22.5' }<br>
+                );
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>🔧 Entité Générique</h2>
+            <p>Entité générique pour tout type de capteur</p>
+            
+            <div class="controls">
+                <button onclick="updateGenericSensor('active', 42)">État Actif</button>
+                <button onclick="updateGenericSensor('inactive', 0)">État Inactif</button>
+            </div>
+            
+            <div class="entities-container" id="generic-container">
+                <!-- L'entité générique sera affichée ici -->
+            </div>
+            
+            <div class="code-block">
+                <strong>Code utilisé :</strong><br>
+                const genericSensor = EnhancedObjectFactory.createObject(<br>
+                &nbsp;&nbsp;'sensor.generic_sensor',<br>
+                &nbsp;&nbsp;'sensor',<br>
+                &nbsp;&nbsp;{ x: 0.5, y: 0.5 },<br>
+                &nbsp;&nbsp;{ state: 'active', attributes: { value: 42 } }<br>
+                );
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>🎨 Personnalisation</h2>
+            <p>Démonstration des options de personnalisation</p>
+            
+            <div class="controls">
+                <button onclick="changeLightStyle('icon')">Style Icon</button>
+                <button onclick="changeLightStyle('card')">Style Card</button>
+                <button onclick="changeLightDimensions(80, 80)">Taille 80x80</button>
+                <button onclick="changeLightDimensions(120, 120)">Taille 120x120</button>
+                <button onclick="changeLightColorScheme('default')">Couleurs Par Défaut</button>
+                <button onclick="changeLightColorScheme('warm')">Couleurs Chaudes</button>
+            </div>
+            
+            <div id="customization-status" class="status status-success">
+                Prêt pour la personnalisation !
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>📊 Comparaison</h2>
+            <p>Comparaison entre les anciennes et nouvelles entités</p>
+            
+            <div class="entities-container">
+                <div class="entity-card">
+                    <h3>Ancienne Lumière</h3>
+                    <div id="old-light" style="width: 60px; height: 60px; background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-lightbulb" style="font-size: 24px; color: #999;"></i>
+                    </div>
+                    <p style="font-size: 12px; color: #666;">Simple icône sans valeurs</p>
+                </div>
+                
+                <div class="entity-card">
+                    <h3>Nouvelle Lumière</h3>
+                    <div id="new-light-comparison" style="width: 80px; height: 80px;">
+                        <!-- Nouvelle lumière sera affichée ici -->
+                    </div>
+                    <p style="font-size: 12px; color: #666;">Avec valeurs et contrôles</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charger le bundle compilé -->
+    <script src="demo-bundle.js"></script>
+    <script>
+        // Les classes sont disponibles globalement via window
+        const EnhancedObjectFactory = window.EnhancedObjectFactory;
+        const BaseEntity = window.BaseEntity;
+        
+        // Variables globales pour les entités
+        let lightEntity = null;
+        let tempSensor = null;
+        let genericSensor = null;
+        
+        // Initialiser les entités lorsque la page est chargée
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Créer les entités
+                lightEntity = EnhancedObjectFactory.createObject(
+                    'light.living_room',
+                    'light',
+                    { x: 0.5, y: 0.5 },
+                    { state: 'on', attributes: { brightness: 150 } }
+                );
+                
+                tempSensor = EnhancedObjectFactory.createObject(
+                    'sensor.outside_temperature',
+                    'sensor',
+                    { x: 0.5, y: 0.5 },
+                    { state: '22.5' }
+                );
+                
+                genericSensor = EnhancedObjectFactory.createObject(
+                    'sensor.generic_sensor',
+                    'sensor',
+                    { x: 0.5, y: 0.5 },
+                    { state: 'active', attributes: { value: 42 } }
+                );
+                
+                // Afficher les entités
+                displayLight();
+                displayTempSensor();
+                displayGenericSensor();
+                displayNewLightComparison();
+                
+                console.log('Toutes les entités ont été créées avec succès !');
+                
+            } catch (error) {
+                console.error('Erreur lors de la création des entités:', error);
+                document.getElementById('customization-status').textContent = 'Erreur: ' + error.message;
+                document.getElementById('customization-status').className = 'status status-error';
+            }
+        });
+        
+        // Fonction pour afficher la lumière
+        function displayLight() {
+            const container = document.getElementById('light-container');
+            if (container && lightEntity) {
+                container.innerHTML = '';
+                container.appendChild(lightEntity.render());
+            }
+        }
+        
+        // Fonction pour afficher le capteur de température
+        function displayTempSensor() {
+            const container = document.getElementById('temp-container');
+            if (container && tempSensor) {
+                container.innerHTML = '';
+                container.appendChild(tempSensor.render());
+            }
+        }
+        
+        // Fonction pour afficher l'entité générique
+        function displayGenericSensor() {
+            const container = document.getElementById('generic-container');
+            if (container && genericSensor) {
+                container.innerHTML = '';
+                container.appendChild(genericSensor.render());
+            }
+        }
+        
+        // Fonction pour afficher la nouvelle lumière dans la comparaison
+        function displayNewLightComparison() {
+            const container = document.getElementById('new-light-comparison');
+            if (container && lightEntity) {
+                container.innerHTML = '';
+                container.appendChild(lightEntity.render());
+            }
+        }
+        
+        // Fonctions de contrôle pour la lumière
+        function toggleLight() {
+            if (lightEntity) {
+                const currentState = lightEntity.getDisplayValue('status');
+                if (currentState === 'ON') {
+                    lightEntity.updateState({ state: 'off' });
+                } else {
+                    lightEntity.updateState({ state: 'on', attributes: { brightness: 150 } });
+                }
+                displayLight();
+                displayNewLightComparison();
+            }
+        }
+        
+        function setBrightness(value) {
+            if (lightEntity) {
+                lightEntity.updateState({ state: 'on', attributes: { brightness: value } });
+                displayLight();
+                displayNewLightComparison();
+            }
+        }
+        
+        // Fonctions de contrôle pour le capteur de température
+        function setTemperature(value) {
+            if (tempSensor) {
+                tempSensor.updateState({ state: value.toString() });
+                displayTempSensor();
+            }
+        }
+        
+        // Fonctions de contrôle pour l'entité générique
+        function updateGenericSensor(state, value) {
+            if (genericSensor) {
+                genericSensor.updateState({ 
+                    state: state, 
+                    attributes: { value: value }
+                });
+                displayGenericSensor();
+            }
+        }
+        
+        // Fonctions de personnalisation
+        function changeLightStyle(style) {
+            if (lightEntity) {
+                lightEntity.setVisualStyle(style);
+                displayLight();
+                displayNewLightComparison();
+                
+                const status = document.getElementById('customization-status');
+                status.textContent = 'Style changé en: ' + style;
+                status.className = 'status status-success';
+            }
+        }
+        
+        function changeLightDimensions(width, height) {
+            if (lightEntity) {
+                lightEntity.setDimensions(width, height);
+                displayLight();
+                displayNewLightComparison();
+                
+                const status = document.getElementById('customization-status');
+                status.textContent = 'Dimensions changées en: ' + width + 'x' + height;
+                status.className = 'status status-success';
+            }
+        }
+        
+        function changeLightColorScheme(scheme) {
+            if (lightEntity) {
+                if (scheme === 'default') {
+                    lightEntity.setColorScheme({
+                        primary: '#FFD700',
+                        secondary: '#FFC107',
+                        background: '#FFFFFF',
+                        text: '#333333'
+                    });
+                } else if (scheme === 'warm') {
+                    lightEntity.setColorScheme({
+                        primary: '#FF5722',
+                        secondary: '#FF9800',
+                        background: '#FFFFFF',
+                        text: '#333333'
+                    });
+                }
+                
+                displayLight();
+                displayNewLightComparison();
+                
+                const status = document.getElementById('customization-status');
+                status.textContent = 'Schéma de couleurs changé en: ' + scheme;
+                status.className = 'status status-success';
+            }
+        }
+        
+        // Exposer les fonctions pour les tests
+        window.testFunctions = {
+            toggleLight,
+            setBrightness,
+            setTemperature,
+            updateGenericSensor,
+            changeLightStyle,
+            changeLightDimensions,
+            changeLightColorScheme
+        };
+        
+    </script>
+</body>
+</html>

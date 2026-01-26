@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Visuel Simple</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .test-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            background: white;
+        }
+        h2 {
+            color: #4285F4;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Visuel Simple des Entités Améliorées</h1>
+    
+    <div class="test-container">
+        <div class="test-section">
+            <h2>Lumière</h2>
+            <div id="light-test"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Capteur de Température</h2>
+            <div id="temp-test"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Entité Générique</h2>
+            <div id="generic-test"></div>
+        </div>
+    </div>
+    
+    <!-- Charger le bundle compilé -->
+    <script src="demo-bundle.js"></script>
+    <script>
+        // Les classes sont disponibles globalement via window
+        const EnhancedObjectFactory = window.EnhancedObjectFactory;
+        
+        // Créer et afficher les entités
+        const light = EnhancedObjectFactory.createObject(
+            'light.test',
+            'light',
+            { x: 0.5, y: 0.5 },
+            { state: 'on', attributes: { brightness: 150 } }
+        );
+        
+        const temp = EnhancedObjectFactory.createObject(
+            'sensor.test_temperature',
+            'sensor',
+            { x: 0.5, y: 0.5 },
+            { state: '22.5' }
+        );
+        
+        const generic = EnhancedObjectFactory.createObject(
+            'sensor.test_generic',
+            'sensor',
+            { x: 0.5, y: 0.5 },
+            { state: 'active', attributes: { value: 42 } }
+        );
+        
+        // Afficher les entités
+        document.getElementById('light-test').appendChild(light.render());
+        document.getElementById('temp-test').appendChild(temp.render());
+        document.getElementById('generic-test').appendChild(generic.render());
+        
+        console.log('Test visuel chargé avec succès !');
+    </script>
+</body>
+</html>

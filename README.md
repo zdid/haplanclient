@@ -1,1 +1,1 @@
-# haplanclient
+# ha-plan-client

@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Démonstration - Fenêtres Contextuelles</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Styles de base pour la démonstration */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        
+        .entities-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            padding: 30px;
+            background: #fff;
+            border-radius: 8px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        .entity-card {
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .entity-card h3 {
+            margin-top: 0;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .instructions {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .instructions h2 {
+            margin-top: 0;
+            color: #2E7D32;
+        }
+        
+        /* Styles pour le tableau de démonstration */
+        .demo-table-container {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+        
+        .demo-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .demo-table th {
+            background: #4285F4;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        .demo-table td {
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            vertical-align: top;
+        }
+        
+        .demo-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .demo-table tr:hover {
+            background: #f0f7ff;
+        }
+        
+        .entity-display {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .window-preview {
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            font-style: italic;
+            color: #666;
+        }
+        
+        .window-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .window-actions button {
+            padding: 5px 10px;
+            background: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+=======
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        
+        .entities-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            padding: 30px;
+            background: #fff;
+            border-radius: 8px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        .entity-card {
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .entity-card h3 {
+            margin-top: 0;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .instructions {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .instructions h2 {
+            margin-top: 0;
+            color: #2E7D32;
+        }
+        
+        /* Styles pour les fenêtres contextuelles */
+        #context-windows-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        #context-windows-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 999;
+        }
+        
+        .context-window {
+            position: absolute;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1001;
+            min-width: 250px;
+            pointer-events: auto;
+        }
+        
+        .context-window h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .context-window button {
+            padding: 8px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #4285F4;
+            color: white;
+            transition: background 0.2s;
+        }
+        
+        .context-window button:hover {
+            background: #3367D6;
+        }
+        
+        .context-window .close-button {
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .context-window .toggle-button {
+            background: #4CAF50;
+        }
+        
+        .brightness-control {
+            margin: 15px 0;
+        }
+        
+        .brightness-control input[type="range"] {
+            width: 100%;
+        }
+        
+        .brightness-value {
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        
+        .temperature-control {
+            margin: 15px 0;
+        }
+        
+        .temperature-control input[type="number"] {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .quick-controls {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .quick-controls button {
+            flex: 1;
+        }
+        
+        .entity-values {
+            margin: 15px 0;
+        }
+        
+        .value-row {
+            display: flex;
+            margin: 5px 0;
+        }
+        
+        .value-label {
+            font-weight: bold;
+            margin-right: 10px;
+            color: #666;
+        }
+        
+        .value-content {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>🎨 Démonstration des Fenêtres Contextuelles</h1>
+        
+        <div class="instructions">
+            <h2>📋 Instructions</h2>
+            <p>Ce tableau montre les objets tels qu'ils apparaissent sur le plan (colonne de gauche) et leurs fenêtres de mise à jour associées (colonne du milieu).</p>
+            <ul>
+                <li><strong>Lumière</strong> : Contrôle de l'état et de la luminosité (fenêtre complexe)</li>
+                <li><strong>Interrupteur</strong> : Bouton simple ON/OFF (fenêtre simple avec fermeture automatique)</li>
+                <li><strong>Thermostat</strong> : Contrôle de la température (fenêtre complexe)</li>
+                <li><strong>Capteur de température</strong> : Affichage seulement (pas de fenêtre de mise à jour)</li>
+            </ul>
+            <p>Cliquez sur "Ouvrir la fenêtre" pour tester les fenêtres complexes. Les fenêtres simples se ferment automatiquement après action.</p>
+            <p>Appuyez sur <strong>Échap</strong> ou cliquez en dehors pour fermer les fenêtres.</p>
+        </div>
+        
+        <div class="demo-table-container">
+            <table class="demo-table">
+                <thead>
+                    <tr>
+                        <th>Objet sur le Plan</th>
+                        <th>Fenêtre de Mise à Jour</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody id="entities-container">
+                    <!-- Les lignes seront ajoutées ici -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Charger le bundle compilé -->
+    <script src="demo-bundle.js"></script>
+    <script>
+        // Attendre que le bundle soit chargé
+        window.addEventListener('load', function() {
+            // Vérifier que toutes les classes sont disponibles
+            if (typeof window.UnifiedObjectFactory === 'undefined') {
+                console.error('UnifiedObjectFactory non disponible');
+                alert('Erreur: UnifiedObjectFactory non chargé. Veuillez vérifier la console.');
+                return;
+            }
+            
+            if (typeof window.ContextWindowManager === 'undefined') {
+                console.error('ContextWindowManager non disponible');
+                alert('Erreur: ContextWindowManager non chargé. Veuillez vérifier la console.');
+                return;
+            }
+            
+            console.log('Bundle chargé avec succès:', {
+                UnifiedObjectFactory: typeof window.UnifiedObjectFactory,
+                ContextWindowManager: typeof window.ContextWindowManager
+            });
+            
+            // Stocker le gestionnaire de fenêtres dans une variable globale
+            // Note: Le bundler renomme ContextWindowManager en ContextWindowManager2
+            window.appWindowManager = window.ContextWindowManager2 ? window.ContextWindowManager2.getInstance() : null;
+            
+            if (!window.appWindowManager) {
+                console.error('Impossible de créer le gestionnaire de fenêtres');
+                alert('Erreur: Impossible de créer le gestionnaire de fenêtres. Veuillez vérifier la console.');
+                return;
+            }
+            
+            try {
+                // Utiliser la variable globale
+                const windowManager = window.appWindowManager;
+                
+                // Créer des entités avec leurs fenêtres
+                const entities = [
+                    // Lumière standard
+                    UnifiedObjectFactory.createObjectWithWindow(
+                        'light.living_room_light',
+                        { x: 0.2, y: 0.2 },
+                        { state: 'on', attributes: { brightness: 150 } }
+                    ),
+                    
+                    // Interrupteur simple
+                    UnifiedObjectFactory.createObjectWithWindow(
+                        'switch.kitchen_light',
+                        { x: 0.4, y: 0.2 },
+                        { state: 'off' }
+                    ),
+                    
+                    // Thermostat
+                    UnifiedObjectFactory.createObjectWithWindow(
+                        'climate.living_room_thermostat',
+                        { x: 0.6, y: 0.2 },
+                        { state: 'heat', attributes: { temperature: 22, target_temp: 20 } }
+                    ),
+                    
+                    // Capteur de température
+                    UnifiedObjectFactory.createObjectWithWindow(
+                        'sensor.outside_temperature',
+                        { x: 0.8, y: 0.2 },
+                        { state: '15.5' }
+                    )
+                ];
+                
+                // Ajouter les entités au tableau
+                const tableBody = document.getElementById('entities-container');
+                entities.forEach(({ entity, window }, index) => {
+                    const row = document.createElement('tr');
+                    
+                    // Colonne 1: Objet sur le plan
+                    const planCell = document.createElement('td');
+                    const entityDisplay = document.createElement('div');
+                    entityDisplay.className = 'entity-display';
+                    
+                    // Just the entity element (icon + value if applicable)
+                    const entityElement = entity.render();
+                    entityDisplay.appendChild(entityElement);
+                    
+                    planCell.appendChild(entityDisplay);
+                    row.appendChild(planCell);
+                    
+                    // Colonne 2: Fenêtre de mise à jour
+                    const windowCell = document.createElement('td');
+                    if (window.isSimple) {
+                        const preview = document.createElement('div');
+                        preview.className = 'window-preview';
+                        preview.textContent = 'Fenêtre simple (fermeture automatique)';
+                        windowCell.appendChild(preview);
+                    } else {
+                        const preview = document.createElement('div');
+                        preview.className = 'window-preview';
+                        preview.textContent = 'Fenêtre complexe (contrôles multiples)';
+                        
+                        const actions = document.createElement('div');
+                        actions.className = 'window-actions';
+                        
+                        const openBtn = document.createElement('button');
+                        openBtn.textContent = 'Ouvrir la fenêtre';
+                        openBtn.addEventListener('click', () => {
+                            if (window.appWindowManager) {
+                                window.appWindowManager.showWindow(entity, window);
+                            } else {
+                                console.error('Gestionnaire de fenêtres non disponible');
+                                alert('Erreur: Gestionnaire de fenêtres non disponible');
+                            }
+                        });
+                        actions.appendChild(openBtn);
+                        
+                        preview.appendChild(actions);
+                        windowCell.appendChild(preview);
+                    }
+                    row.appendChild(windowCell);
+                    
+                    // Colonne 3: Description
+                    const descCell = document.createElement('td');
+                    const entityType = entity.getEntity_id().split('.')[0];
+                    const deviceType = entity.getEntity_id().split('.')[1].split('_')[0];
+                    
+                    let description = '';
+                    if (entityType === 'light') {
+                        description = 'Lumière (icône + état)';
+                    } else if (entityType === 'switch') {
+                        description = 'Interrupteur (icône seulement)';
+                    } else if (entityType === 'climate') {
+                        description = 'Thermostat (icône + température)';
+                    } else if (entityType === 'sensor' && deviceType === 'temperature') {
+                        description = 'Capteur (valeur seulement)';
+                    }
+                    
+                    descCell.textContent = description;
+                    row.appendChild(descCell);
+                    
+                    tableBody.appendChild(row);
+                });
+                
+                console.log('Démonstration initialisée avec succès !');
+                
+            } catch (error) {
+                console.error('Erreur lors de l\'initialisation:', error);
+                alert('Erreur: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
