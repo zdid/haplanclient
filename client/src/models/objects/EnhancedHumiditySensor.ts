@@ -1,16 +1,15 @@
 import { BaseEntity } from './BaseEntity';
-import { CommandService } from '../../services/CommandService';
+import { DataService } from '../../services/DataService';
 
 export class EnhancedHumiditySensor extends BaseEntity {
-  protected humidity: number = 0;
-
+  humidity: string | number = 0;
   constructor(
     entity_id: string,
     position: { x: number; y: number },
-    dimensions: { width: number; height: number } = { width: 100, height: 100 },
-    commandService?: CommandService
+    dimensions: { width: number; height: number } = { width: 24, height: 24 },
+    dataService?: DataService  // ✅ CHANGER
   ) {
-    super(entity_id, position, dimensions, commandService);
+    super(entity_id, position, dimensions, dataService);  // ✅ CHANGER
     this.setVisualStyle('minimal'); // Style minimal pour afficher uniquement la valeur
     this.setColorScheme({
       primary: '#00BCD4', // Cyan
@@ -21,7 +20,8 @@ export class EnhancedHumiditySensor extends BaseEntity {
   }
 
   updateState(state: any): void {
-    this.humidity = state.state || 0;
+    const rawValue = state.state || 0;
+    this.humidity = this.normalizeDisplayValue(rawValue);
     
     this.updateDisplay();
   }
@@ -31,9 +31,10 @@ export class EnhancedHumiditySensor extends BaseEntity {
 
     // Créer uniquement l'affichage de la valeur (affichage simplifié)
     const valueDisplay = this.createStyledElement('div', 'sensor-value-display');
-    valueDisplay.textContent = `${this.humidity}%`;
-    valueDisplay.style.fontSize = '24px';
-    valueDisplay.style.fontWeight = 'bold';
+    valueDisplay.textContent = this.humidity === 'N/A'
+      ? 'N/A'
+      : `${this.humidity}%`;
+    valueDisplay.style.fontWeight = 'normal';
     valueDisplay.style.color = '#FFFFFF'; // Texte blanc pour le contraste
 
     // Assembler les éléments (uniquement la valeur)
@@ -54,7 +55,9 @@ export class EnhancedHumiditySensor extends BaseEntity {
     // Mettre à jour uniquement la valeur d'humidité
     const valueDisplay = this.element.querySelector('.sensor-value-display') as HTMLElement;
     if (valueDisplay) {
-      valueDisplay.textContent = `${this.humidity}%`;
+      valueDisplay.textContent = this.humidity === 'N/A'
+        ? 'N/A'
+        : `${this.humidity}%`;
     }
   }
 

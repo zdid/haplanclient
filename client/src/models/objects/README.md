@@ -53,13 +53,13 @@ models/objects/
 
 ```typescript
 import { EnhancedObjectFactory } from './models/objects/EnhancedObjectFactory';
-import { CommandService } from '../../services/CommandService';
+import { DataService } from '../../services/DataService';
 ```
 
 ### 2. Créer une entité
 
 ```typescript
-const commandService = new CommandService();
+const commandService = new DataService();
 
 const light = EnhancedObjectFactory.createObject(
   'light.living_room_light',

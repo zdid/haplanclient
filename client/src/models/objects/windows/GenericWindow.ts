@@ -12,16 +12,16 @@ export class GenericWindow implements ContextWindow {
   }
 
   render(): HTMLElement {
-    const window = document.createElement('div');
-    window.className = 'context-window generic-window';
+    const cwindow = document.createElement('div');
+    cwindow.className = 'context-window generic-window';
     
     // Appliquer les styles de base pour les fenêtres contextuelles
-    window.style.backgroundColor = 'rgba(0, 0, 0, 0.8)'; // Fond semi-transparent
-    window.style.color = '#FFFFFF'; // Texte blanc
-    window.style.padding = '15px';
-    window.style.borderRadius = '8px';
-    window.style.minWidth = '250px';
-    window.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.3)';
+    cwindow.style.backgroundColor = 'rgba(0, 0, 0, 0.8)'; // Fond semi-transparent
+    cwindow.style.color = '#FFFFFF'; // Texte blanc
+    cwindow.style.padding = '15px';
+    cwindow.style.borderRadius = '8px';
+    cwindow.style.minWidth = '250px';
+    cwindow.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.3)';
 
     // Titre formaté avec area - entity name
     const title = document.createElement('h3');
@@ -30,10 +30,10 @@ export class GenericWindow implements ContextWindow {
     title.style.color = '#FFFFFF';
     title.style.borderBottom = '1px solid rgba(255, 255, 255, 0.2)';
     title.style.paddingBottom = '10px';
-    window.appendChild(title);
+    cwindow.appendChild(title);
     
     // Appliquer la taille de police
-    applyFontSizeToWindow(window);
+    applyFontSizeToWindow(cwindow);
 
     // Affichage des valeurs
     const valuesContainer = document.createElement('div');
@@ -60,9 +60,9 @@ export class GenericWindow implements ContextWindow {
       });
     }
 
-    window.appendChild(valuesContainer);
+    cwindow.appendChild(valuesContainer);
 
-    return window;
+    return cwindow;
   }
 
   onAction(action: string, value?: any): void {
@@ -109,5 +109,14 @@ export class GenericWindow implements ContextWindow {
 
   close(): void {
     // Rien à faire ici
+  }
+   // ✅ AJOUTER
+  getElement(): HTMLElement {
+    return this.element;
+  }
+
+  // ✅ AJOUTER
+  addEventListener(event: string, handler: (e: Event) => void): void {
+    this.element.addEventListener(event, handler);
   }
 }

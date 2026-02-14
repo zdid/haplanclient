@@ -195,7 +195,7 @@ var HAObject = class {
   setPosition(x, y) {
     this.position = { x, y };
   }
-  setCommandService(commandService) {
+  setDataService(commandService) {
     this.commandService = commandService;
   }
   setPositionManager(positionManager) {
@@ -329,7 +329,7 @@ var HAObject = class {
     if (this.commandService && this.commandService.isConnected()) {
       this.commandService.sendCommand(this.entity_id, service, serviceData);
     } else {
-      console.warn(`Cannot send command: ${service} - CommandService not available or not connected`);
+      console.warn(`Cannot send command: ${service} - DataService not available or not connected`);
     }
   }
   destroy() {

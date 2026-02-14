@@ -25,26 +25,85 @@ body {
     display: block;
     width: auto;
     height: auto;
+    pointer-events: none;
 }
 
 /* Menu system */
-.menu-button {
+
+.top-bar {
     position: absolute;
-    top: 10px;
-    left: 10px;
-    z-index: 100;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    top: 6px;
+    left: 6px;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    z-index: 999;
 }
 
-.menu-button.editing {
-    background: #ffeb3b;
+.menu-quick-actions {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.menu-quick-action {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none;
+}
+
+.menu-quick-action i {
+    color: #444;
+    font-size: 14px;
+}
+
+.menu-quick-action.menu-quick-font {
+    width: auto;
+    padding: 0 6px;
+    gap: 6px;
+}
+
+.menu-quick-text {
+    font-size: 10px;
+    color: #444;
+    white-space: nowrap;
+}
+
+.floorplan-selector-inline {
+    display: flex;
+    align-items: baseline;
+}
+
+.floorplan-entity-display {
+    line-height: 1;
+}
+
+.menu-quick-indicator {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none;
+}
+
+.menu-quick-indicator i {
+    color: #444;
+    font-size: 14px;
+}
+
+.menu-quick-action:hover {
+    background: rgba(0,0,0,0.06);
 }
 
 .menu-panel {
@@ -70,10 +129,82 @@ body {
     text-align: left;
     cursor: pointer;
     margin: 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.menu-icon {
+    width: 18px;
+    text-align: center;
+    color: #444;
 }
 
 .menu-item:hover {
     background: #f5f5f5;
+}
+
+.font-size-setting {
+    display: flex;
+    justify-content: center;
+}
+
+.font-size-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.font-size-button {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: #ffffff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+}
+
+.font-size-button.active {
+    border-color: #4caf50;
+    box-shadow: 0 0 0 2px rgba(76,175,80,0.2);
+}
+
+.font-size-button:hover {
+    background: #f5f5f5;
+}
+
+.font-size-xs {
+    font-size: 12px;
+}
+
+.font-size-sm {
+    font-size: 14px;
+}
+
+.font-size-md {
+    font-size: 16px;
+}
+
+.font-size-lg {
+    font-size: 18px;
+}
+
+.font-size-xl {
+    font-size: 20px;
+}
+
+/* Floorplan selector beside menu button */
+.floorplan-select {
+    color: #111;
+    background: #ffffff;
+}
+
+.floorplan-select option {
+    color: #111;
+    background: #ffffff;
 }
 
 /* Entity selector */
@@ -156,8 +287,8 @@ body {
 }
 
 .cover-object .position, .blind-object .position {
-    font-weight: bold;
-    font-size: 16px;
+    font-weight: normal;
+    font-size: 12px;
 }
 
 .thermostat-object {
@@ -177,8 +308,8 @@ body {
 }
 
 .thermostat-object .temp {
-    font-weight: bold;
-    font-size: 16px;
+    font-weight: normal;
+    font-size: 12px;
 }
 
 /* Trash icon for edit mode */
@@ -223,18 +354,19 @@ body {
     width: 100%;
     height: 100%;
     border: 1px solid #CCCCCC;
-    pointer-events: none;
-    z-index: 1;
+    pointer-events: auto;
+    z-index: 2;
 }
 
 .floorplan-container.edit-mode .floorplan-drag-container {
     border: 2px dashed #ffeb3b;
-    pointer-events: auto;
 }
 
 /* Style pour les objets draggables */
 .ha-object {
     cursor: move;
+    font-size: calc(12px * var(--plan-scale, 1));
+    font-weight: normal;
     transition: transform 0.1s ease;
 }
 
@@ -263,11 +395,13 @@ body {
     overflow: hidden;
     transition: all 0.2s ease;
     font-family: 'Arial', sans-serif;
+    font-size: 12px;
+    font-weight: normal;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 8px;
+    padding: 2px;
     box-sizing: border-box;
 }
 
@@ -280,7 +414,7 @@ body {
 .base-entity.icon-style {
     width: 60px;
     height: 60px;
-    padding: 6px;
+    padding: 2px;
 }
 
 .base-entity.card-style {
@@ -301,8 +435,8 @@ body {
 
 /* Éléments communs */
 .entity-title {
-    font-size: 10px;
-    font-weight: bold;
+    font-size: calc(12px * var(--plan-scale, 1));
+    font-weight: normal;
     color: var(--entity-text-color);
     text-align: center;
     margin-bottom: 4px;
@@ -365,25 +499,25 @@ body {
     border: 1px solid #e0e0e0;
     border-radius: 12px;
     padding: 2px 6px;
-    font-size: 10px;
+    font-size: calc(12px * var(--plan-scale, 1));
     display: flex;
     align-items: center;
     gap: 2px;
 }
 
 .value-badge .badge-label {
-    font-weight: bold;
+    font-weight: normal;
     color: #666;
 }
 
 .value-badge .badge-value {
     color: var(--entity-text-color);
-    font-weight: bold;
+    font-weight: normal;
 }
 
 .value-badge .badge-unit {
     color: #999;
-    font-size: 8px;
+    font-size: calc(8px * var(--plan-scale, 1));
 }
 
 .entity-button {
@@ -391,8 +525,8 @@ body {
     color: white;
     border: none;
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
+    width: calc(24px * var(--plan-scale, 1));
+    height: calc(24px * var(--plan-scale, 1));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -407,7 +541,23 @@ body {
 }
 
 .entity-button i {
-    font-size: 12px;
+    font-size: calc(12px * var(--plan-scale, 1));
+}
+
+.sensor-value-display {
+    font-size: calc(12px * var(--plan-scale, 1));
+}
+
+.thermostat-temp-display {
+    font-size: calc(12px * var(--plan-scale, 1));
+}
+
+.thermostat-target-temp {
+    font-size: calc(12px * var(--plan-scale, 1));
+}
+
+.thermostat-current-temp {
+    font-size: calc(12px * var(--plan-scale, 1));
 }
 
 .entity-slider {
@@ -462,13 +612,13 @@ body {
 }
 
 .temperature-display .temp-value {
-    font-size: 20px;
+    font-size: calc(20px * var(--plan-scale, 1));
     font-weight: bold;
     color: var(--entity-primary-color);
 }
 
 .temperature-display .temp-unit {
-    font-size: 12px;
+    font-size: calc(12px * var(--plan-scale, 1));
     color: var(--entity-text-color);
     margin-left: 2px;
 }
@@ -594,4 +744,43 @@ body {
 
 .context-window .value-content {
     color: #333;
+}
+
+/* Styles pour le dialogue de nom de plan */
+.floorplan-name-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.floorplan-name-dialog input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  margin: 10px 0;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.floorplan-name-dialog button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.floorplan-name-dialog button:first-child {
+  background: #f0f0f0;
+}
+
+.floorplan-name-dialog button:last-child {
+  background: #4CAF50;
+  color: white;
 }

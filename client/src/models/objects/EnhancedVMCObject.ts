@@ -1,6 +1,6 @@
 // Classe pour les VMC (Ventilation Mécanique Contrôlée)
 import { EnhancedSwitchObject } from './EnhancedSwitchObject';
-import { CommandService } from '../../services/CommandService';
+import { DataService } from '../../services/DataService';
 
 /**
  * Classe pour les VMC
@@ -10,14 +10,14 @@ export class EnhancedVMCObject extends EnhancedSwitchObject {
   constructor(
     entity_id: string,
     position: { x: number; y: number },
-    dimensions: { width: number; height: number } = { width: 80, height: 80 },
-    commandService?: CommandService
+    dimensions: { width: number; height: number } = { width: 32, height: 32 },
+    dataService?: DataService  // ✅ CHANGER
   ) {
-    super(entity_id, position, dimensions, commandService);
+    super(entity_id, position, dimensions, dataService);  // ✅ CHANGER
     // Couleurs spécifiques pour les VMC
     this.setColorScheme({
-      primary: '#9C27B0', // Violet
-      secondary: '#BA68C8',
+      primary: '#FF9800', // Orange
+      secondary: '#FFB74D',
       background: 'transparent',
       text: '#FFFFFF'
     });
@@ -70,16 +70,13 @@ export class EnhancedVMCObject extends EnhancedSwitchObject {
   updateDisplay(): void {
     if (!this.element) return;
     
-    // Mettre à jour l'icône
-    const iconElement = this.element.querySelector('i');
-    if (iconElement) {
-      iconElement.style.color = this.isOn ? this.colorScheme.primary : '#999999';
+    const icon = this.element.querySelector('i') as HTMLElement;  // ✅ AJOUTER cast
+    if (icon) {
+      icon.style.color = this.isOn ? this.colorScheme.primary : '#999999';
     }
     
-    // Mettre à jour l'état
-    const statusDisplay = this.element.querySelector('.vmc-status-display');
+    const statusDisplay = this.element.querySelector('.vmc-status-display') as HTMLElement;  // ✅ AJOUTER cast
     if (statusDisplay) {
-      statusDisplay.textContent = this.isOn ? 'ON' : 'OFF';
       statusDisplay.style.color = this.isOn ? this.colorScheme.primary : '#999999';
     }
   }

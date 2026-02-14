@@ -14,7 +14,32 @@ export class EntitySelector {
     this.container = container;
     this.onEntitySelectedCallback = onEntitySelected;
     this.createSelectors();
+
+    // // Gestionnaire pour fermer le menu si clic en dehors
+    // document.addEventListener('mousedown', this.handleDocumentClick, true);
   }
+
+  // Nettoyage si besoin (ex: à appeler lors de la destruction)
+  // destroy(): void {
+  //   document.removeEventListener('mousedown', this.handleDocumentClick, true);
+  // }
+
+  // // Masquer le menu
+  // hide(): void {
+  //   this.container.style.display = 'none';
+  // }
+
+  // // // Afficher le menu
+  // show(): void {
+  //    this.container.style.display = '';
+  // }
+
+  // Gestion du clic en dehors
+  // private handleDocumentClick = (event: MouseEvent) => {
+  //   if (!this.container.contains(event.target as Node)) {
+  //     this.hide();
+  //   }
+  // };
 
   // Méthode pour définir les states
   setStates(states: any): void {
@@ -51,6 +76,7 @@ export class EntitySelector {
 
   // Méthode pour obtenir l'élément principal
   getElement(): HTMLElement {
+    console.log(`[TRACE] getElement appelé, container:`, this.container);
     return this.container;
   }
 
@@ -220,7 +246,7 @@ export class EntitySelector {
         option.value = entity.entity_id;
         
         // Utiliser original_name directement depuis l'entité, sinon entity_id
-        const displayName = entity.original_name || entity.entity_id;
+        const displayName = entity.original_name || entity.name || entity.deviceName || entity.entity_id ;
         
         option.textContent = displayName;
         this.entitySelect.appendChild(option);

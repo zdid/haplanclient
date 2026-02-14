@@ -11,7 +11,10 @@ export class FloorPlan {
   private offset: {x: number, y: number} = {x: 0, y: 0};
   private lastMousePosition: { x: number, y: number } | null = null;
   private dragContainer: HTMLElement| null = null;
+  private dragContainerId: string | null = null;
+  private trashIconId: string | null = null;
   private positionManager: PositionManager | undefined;
+  private measurementDiv: HTMLElement | null = null; // Div de référence pour les mesures
 ;
   private trashPosition: {x: number, y: number} = {x: 0.95, y: 0.05}; // Position de la poubelle en pourcentages
 
@@ -28,8 +31,7 @@ export class FloorPlan {
     if (this.dragContainer) {
       this.dragContainer.style.width = '100%';
       this.dragContainer.style.height = '100%';
-      // Positionner les objets initialement
-      this.positionAllObjects();
+      // Les objets seront positionnés après le chargement du plan
     }
   }
 
@@ -37,12 +39,31 @@ export class FloorPlan {
     this.container.className = 'floorplan-container';
     this.container.style.position = 'relative';
     this.container.style.overflow = 'hidden';
+    
+    // Créer un div de référence pour mesurer les dimensions réelles
+    // Même quand le container parent est en display:none
+    this.measurementDiv = document.createElement('div');
+    this.measurementDiv.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      visibility: hidden;
+      z-index: -1;
+    `;
+    this.container.appendChild(this.measurementDiv);
+    
     this.setupResizeListener();
   }
 
   private createDragContainer(): void {
+    const containerIdPrefix = this.getContainerIdPrefix();
+
     this.dragContainer = document.createElement('div');
-    this.dragContainer.id = 'floorplan-drag-container';
+    this.dragContainerId = `${containerIdPrefix}-drag-container`;
+    this.dragContainer.id = this.dragContainerId;
     this.dragContainer.className = 'floorplan-drag-container';
     this.dragContainer.style.position = 'absolute';
     this.dragContainer.style.top = '50%';
@@ -53,6 +74,10 @@ export class FloorPlan {
     this.container.appendChild(this.dragContainer);
     this.createTrashIcon(); // Puis créer la poubelle
   
+  }
+
+  private getContainerIdPrefix(): string {
+    return this.container.id || 'floorplan';
   }
 
   loadPlan(url: string): Promise<void> {
@@ -77,12 +102,52 @@ export class FloorPlan {
         // Cela garantit que les objets sont correctement centrés et positionnés
         // par rapport au nouveau plan chargé
         this.objects.forEach(object => {
-          const element = object.render();
+          const element = object.getElement() || object.render();
+          if (this.dragContainer && element.parentElement !== this.dragContainer) {
+            this.dragContainer.appendChild(element);
+          }
           this.positionObjectElement(element, object.getPosition());
         });
         
         resolve();
       };
+    });
+  }
+
+  loadPlanFromImage(image: HTMLImageElement): Promise<void> {
+    return new Promise((resolve) => {
+      if (this.planImage) {
+        this.planImage.remove();
+      }
+
+      // Cloner l'image pour éviter les conflits
+      this.planImage = image.cloneNode(true) as HTMLImageElement;
+      this.planImage.className = 'floorplan-image';
+      this.planImage.style.maxWidth = '100%';
+      this.planImage.style.maxHeight = '100%';
+
+      // Attendre que l'image soit complètement chargée et le DOM mis à jour
+      requestAnimationFrame(() => {
+        this.resizePlanAndContainer(); // Adapter le plan au conteneur
+        this.container.appendChild(this.planImage!);
+        
+        // Double requestAnimationFrame pour garantir que le DOM est stable
+        // et que le container parent a ses dimensions finales
+        requestAnimationFrame(() => {
+          // Re-calculer pour être sûr d'avoir les bonnes dimensions
+          this.resizePlanAndContainer();
+          
+          this.objects.forEach(object => {
+            const element = object.getElement() || object.render();
+            if (this.dragContainer && element.parentElement !== this.dragContainer) {
+              this.dragContainer.appendChild(element);
+            }
+            this.positionObjectElement(element, object.getPosition());
+          });
+          
+          resolve();
+        });
+      });
     });
   }
 
@@ -148,15 +213,33 @@ export class FloorPlan {
       return;
     }
 
-    const containerRect = this.container.getBoundingClientRect();
+    // Utiliser le measurementDiv pour obtenir les dimensions réelles
+    // Même si le container parent est en display:none
+    const measurementRect = this.measurementDiv?.getBoundingClientRect();
+    
+    if (!measurementRect || measurementRect.width === 0 || measurementRect.height === 0) {
+      console.warn('[FloorPlan] Dimensions du measurementDiv nulles, utilisation du container');
+      // Fallback sur le container si le measurementDiv a des dimensions nulles
+      const containerRect = this.container.getBoundingClientRect();
+      if (containerRect.width === 0 || containerRect.height === 0) {
+        console.warn('[FloorPlan] Container et measurementDiv ont des dimensions nulles, impossible de dimensionner');
+        return;
+      }
+    }
+    
+    const containerWidth = measurementRect?.width || this.container.getBoundingClientRect().width;
+    const containerHeight = measurementRect?.height || this.container.getBoundingClientRect().height;
+    
+    console.log(`[FloorPlan] Dimensions disponibles: ${containerWidth}x${containerHeight}`);
+
     const imageRect = {
       width: this.planImage.naturalWidth,
       height: this.planImage.naturalHeight
     };
 
     // Calculer les ratios pour adapter le plan au conteneur
-    const widthRatio = containerRect.width / imageRect.width;
-    const heightRatio = containerRect.height / imageRect.height;
+    const widthRatio = containerWidth / imageRect.width;
+    const heightRatio = containerHeight / imageRect.height;
     
     // Utiliser le ratio qui permet au plan de s'adapter complètement au conteneur
     // en maintenant les proportions (le plan ne dépasse jamais du conteneur)
@@ -164,6 +247,8 @@ export class FloorPlan {
 
     const scaledWidth = imageRect.width * this.scale;
     const scaledHeight = imageRect.height * this.scale;
+    
+    console.log(`[FloorPlan] Plan dimensionné: ${scaledWidth}x${scaledHeight} (scale: ${this.scale})`);
 
     // Dimensionner le plan
     this.planImage!.style.width = `${scaledWidth}px`;
@@ -206,7 +291,10 @@ export class FloorPlan {
     }
     
     this.objects.forEach(object => {
-      const element = object.render();
+      const element = object.getElement() || object.render();
+      if (this.dragContainer && element.parentElement !== this.dragContainer) {
+        this.dragContainer.appendChild(element);
+      }
       const position = object.getPosition();
       
       // Positionner l'élément en pourcentage par rapport au dragContainer
@@ -254,6 +342,15 @@ export class FloorPlan {
     this.hideDragContainerBorder();
   }
 
+  /**
+   * Force le recalcul des dimensions du plan et du dragContainer
+   * Utile après avoir affiché un container qui était caché
+   */
+  forceResize(): void {
+    console.log('[FloorPlan] ForceResize: Recalcul des dimensions');
+    this.resizePlanAndContainer();
+  }
+
   private showDragContainerBorder(): void {
     if (this.dragContainer) {
       // En mode édition : contour vert + liseré pointillé vert
@@ -290,9 +387,12 @@ export class FloorPlan {
   }
 
   private createTrashIcon(): void {
+    const containerIdPrefix = this.getContainerIdPrefix();
+
     const trashIcon = document.createElement('div');
     trashIcon.className = 'trash-icon';
-    trashIcon.id = 'floorplan-trash-icon';
+    this.trashIconId = `${containerIdPrefix}-trash-icon`;
+    trashIcon.id = this.trashIconId;
     trashIcon.innerHTML = '<i class="fas fa-trash-alt"></i>';
     trashIcon.style.display = 'none';
     trashIcon.style.position = 'absolute';
@@ -340,7 +440,7 @@ export class FloorPlan {
    * Rend la poubelle déplaçable avec les mêmes règles que les entités
    */
   private makeTrashIconDraggable(): void {
-    const trashIcon = document.getElementById('floorplan-trash-icon');
+    const trashIcon = this.getTrashIconElement();
     if (!trashIcon) {
       console.warn('Trash icon not found, cannot make it draggable');
       return;
@@ -373,7 +473,8 @@ export class FloorPlan {
     };
     
     // Utiliser DragAndDropConstrained pour la poubelle (mode center)
-    new DragAndDropConstrained('#floorplan-trash-icon', onTrashDragEnd, 'center');
+    const trashSelector = this.trashIconId ? `#${this.trashIconId}` : '.trash-icon';
+    new DragAndDropConstrained(trashSelector, onTrashDragEnd, 'center');
   }
 
   private showTrashIcon(): void {
@@ -405,13 +506,23 @@ export class FloorPlan {
    * Appelé lorsque l'on quitte le mode paramétrage
    */
   private disableTrashIconDrag(): void {
-    const trashIcon = document.getElementById('floorplan-trash-icon');
+    const trashIcon = this.getTrashIconElement();
     if (trashIcon) {
       // Supprimer tous les gestionnaires d'événements de drag
       const clone = trashIcon.cloneNode(true);
       trashIcon.parentNode?.replaceChild(clone, trashIcon);
       console.log('[TRACE] FloorPlan - Drag de la poubelle désactivé - mode normal');
     }
+  }
+
+  private getTrashIconElement(): HTMLElement | null {
+    if (!this.dragContainer) {
+      return null;
+    }
+    if (this.trashIconId) {
+      return this.dragContainer.querySelector(`#${this.trashIconId}`) as HTMLElement | null;
+    }
+    return this.dragContainer.querySelector('.trash-icon') as HTMLElement | null;
   }
 
   private setupTrashDropZone(): void {

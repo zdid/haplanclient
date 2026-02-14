@@ -12,13 +12,13 @@ import { EnhancedWaterHeaterObject } from './EnhancedWaterHeaterObject';
 import { EnhancedRadiatorObject } from './EnhancedRadiatorObject';
 import { EnhancedVMCObject } from './EnhancedVMCObject';
 import { SwitchTypeDetector } from '../../utils/SwitchTypeDetector';
-import { CommandService } from '../../services/CommandService';
 import { ContextWindow } from './windows/ContextWindow';
 import { LightWindow } from './windows/LightWindow';
 import { SwitchWindow } from './windows/SwitchWindow';
 import { ThermostatWindow } from './windows/ThermostatWindow';
 import { GenericWindow } from './windows/GenericWindow';
 import { SwitchContextWindow } from './windows/SwitchContextWindow';
+import { DataService } from '../../services/DataService';  // ✅ GARDER SEUL import
 
 export class UnifiedObjectFactory {
   // Registre des créateurs d'entités
@@ -26,7 +26,7 @@ export class UnifiedObjectFactory {
     entity_id: string,
     position: { x: number; y: number },
     state?: any,
-    commandService?: CommandService
+    dataService?: DataService  // ✅ CHANGER
   ) => BaseEntity> = new Map();
 
   // Registre des créateurs de fenêtres
@@ -39,82 +39,74 @@ export class UnifiedObjectFactory {
 
   private static registerDefaultTypes(): void {
     // Lumière standard
-    this.registerEntityType('light', (entity_id, position, state, commandService) => {
-      const light = new EnhancedLightObject(entity_id, position, { width: 80, height: 80 }, commandService);
-      if (state) light.updateState(state);
+    this.registerEntityType('light', (entity_id, position, state, dataService) => {  // ✅ CHANGER
+      const light = new EnhancedLightObject(entity_id, position, { width: 40, height: 40 }, dataService);  // ✅ CHANGER
+      // Ne plus appeler updateState ici - sera fait après render()
       return light;
     });
 
     this.registerWindowType('light', (entity) => new LightWindow(entity as EnhancedLightObject));
 
     // Lumière minimaliste
-    this.registerEntityType('minimal_light', (entity_id, position, state, commandService) => {
-      const light = new MinimalLightObject(entity_id, position, { width: 32, height: 32 }, commandService);
-      if (state) light.updateState(state);
+    this.registerEntityType('minimal_light', (entity_id, position, state, dataService) => {  // ✅ CHANGER
+      const light = new MinimalLightObject(entity_id, position, { width: 24, height: 24 }, dataService);  // ✅ CHANGER
       return light;
     });
 
     this.registerWindowType('minimal_light', (entity) => new LightWindow(entity as MinimalLightObject));
 
     // Capteur de température
-    this.registerEntityType('temperature_sensor', (entity_id, position, state, commandService) => {
-      const sensor = new EnhancedTemperatureSensor(entity_id, position, { width: 100, height: 100 }, commandService);
-      if (state) sensor.updateState(state);
+    this.registerEntityType('temperature_sensor', (entity_id, position, state, dataService) => {  // ✅ CHANGER
+      const sensor = new EnhancedTemperatureSensor(entity_id, position, { width: 50, height: 50 }, dataService);  // ✅ CHANGER
       return sensor;
     });
 
     this.registerWindowType('temperature_sensor', (entity) => new GenericWindow(entity));
 
     // Capteur d'humidité
-    this.registerEntityType('humidity_sensor', (entity_id, position, state, commandService) => {
-      const sensor = new EnhancedHumiditySensor(entity_id, position, { width: 100, height: 100 }, commandService);
-      if (state) sensor.updateState(state);
+    this.registerEntityType('humidity_sensor', (entity_id, position, state, dataService) => {  // ✅ CHANGER
+      const sensor = new EnhancedHumiditySensor(entity_id, position, { width: 50, height: 50 }, dataService);  // ✅ CHANGER
       return sensor;
     });
 
     this.registerWindowType('humidity_sensor', (entity) => new GenericWindow(entity));
 
     // Capteur générique
-    this.registerEntityType('generic_sensor', (entity_id, position, state, commandService) => {
+    this.registerEntityType('generic_sensor', (entity_id, position, state, dataService) => {  // ✅ CHANGER
       const sensorType = entity_id.split('.')[1].split('_')[0];
-      const sensor = new EnhancedGenericSensor(entity_id, position, sensorType, { width: 80, height: 80 }, commandService);
-      if (state) sensor.updateState(state);
+      const sensor = new EnhancedGenericSensor(entity_id, position, sensorType, { width: 40, height: 40 }, dataService);  // ✅ CHANGER
       return sensor;
     });
 
     this.registerWindowType('generic_sensor', (entity) => new GenericWindow(entity));
 
     // Interrupteur simple
-    this.registerEntityType('switch', (entity_id, position, state, commandService) => {
-      const light = new MinimalLightObject(entity_id, position, { width: 32, height: 32 }, commandService);
-      if (state) light.updateState(state);
+    this.registerEntityType('switch', (entity_id, position, state, dataService) => {  // ✅ CHANGER
+      const light = new MinimalLightObject(entity_id, position, { width: 24, height: 24 }, dataService);  // ✅ CHANGER
       return light;
     });
 
     this.registerWindowType('switch', (entity) => new SwitchWindow(entity as MinimalLightObject));
 
     // Volet/Store
-    this.registerEntityType('cover', (entity_id, position, state, commandService) => {
-      const cover = new EnhancedCoverObject(entity_id, position, { width: 80, height: 80 }, commandService);
-      if (state) cover.updateState(state);
+    this.registerEntityType('cover', (entity_id, position, state, dataService) => {  // ✅ CHANGER
+      const cover = new EnhancedCoverObject(entity_id, position, { width: 40, height: 40 }, dataService);  // ✅ CHANGER
       return cover;
     });
 
     this.registerWindowType('cover', (entity) => new GenericWindow(entity));
 
     // Store spécifique
-    this.registerEntityType('blind', (entity_id, position, state, commandService) => {
-      const blind = new EnhancedBlindObject(entity_id, position, { width: 80, height: 80 }, commandService);
-      if (state) blind.updateState(state);
+    this.registerEntityType('blind', (entity_id, position, state, dataService) => {  // ✅ CHANGER
+      const blind = new EnhancedBlindObject(entity_id, position, { width: 40, height: 40 }, dataService);  // ✅ CHANGER
       return blind;
     });
 
     this.registerWindowType('blind', (entity) => new GenericWindow(entity));
 
     // Thermostat
-    this.registerEntityType('thermostat', (entity_id, position, state, commandService) => {
-      const thermostat = new EnhancedThermostatObject(entity_id, position, { width: 100, height: 100 }, commandService);
-      if (state) thermostat.updateState(state);
+    this.registerEntityType('thermostat', (entity_id, position, state, dataService) => {  // ✅ CHANGER
+      const thermostat = new EnhancedThermostatObject(entity_id, position, { width: 60, height: 60 }, dataService);  // ✅ CHANGER
       return thermostat;
     });
 
@@ -128,15 +120,15 @@ export class UnifiedObjectFactory {
     entity_id: string,
     position: { x: number; y: number },
     state?: any,
-    commandService?: CommandService
-  ): { entity: BaseEntity; window: ContextWindow } {
+    dataService?: DataService  // ✅ CHANGER
+  ): { entity: BaseEntity; cwindow: ContextWindow } {
     // D'abord vérifier par domaine
     const entityType = this.getEntityType(entity_id);
     
     // Si c'est un switch, vérifier le type spécifique
     const isSwitch = entityType === 'switch' || entityType === 'light';
     let entity: BaseEntity;
-    let window: ContextWindow;
+    let cwindow: ContextWindow;
     
     if (isSwitch) {
       // Détecter le type spécifique de switch
@@ -144,41 +136,41 @@ export class UnifiedObjectFactory {
       
       switch (switchType) {
         case 'vmc':
-          entity = new EnhancedVMCObject(entity_id, position, { width: 80, height: 80 }, commandService);
-          window = new SwitchContextWindow(entity);
+          entity = new EnhancedVMCObject(entity_id, position, { width: 40, height: 40 }, dataService);  // ✅ CHANGER
+          cwindow = new SwitchContextWindow(entity);
           break;
         case 'water_heater':
-          entity = new EnhancedWaterHeaterObject(entity_id, position, { width: 80, height: 80 }, commandService);
-          window = new SwitchContextWindow(entity);
+          entity = new EnhancedWaterHeaterObject(entity_id, position, { width: 40, height: 40 }, dataService);  // ✅ CHANGER
+          cwindow = new SwitchContextWindow(entity);
           break;
         case 'radiator':
-          entity = new EnhancedRadiatorObject(entity_id, position, { width: 80, height: 80 }, commandService);
-          window = new SwitchContextWindow(entity);
+          entity = new EnhancedRadiatorObject(
+            entity_id,
+            position,
+            { width: 40, height: 40 },
+            dataService  // ✅ CHANGER
+          );
+          cwindow = new SwitchContextWindow(entity);
           break;
         default:
           // Switch générique
           const entityCreator = this.entityCreators.get(entityType) || this.entityCreators.get('light');
-          entity = entityCreator!(entity_id, position, state, commandService);
+          entity = entityCreator!(entity_id, position, state, dataService);  // ✅ CHANGER
           const windowCreator = this.windowCreators.get(entityType) || this.windowCreators.get('light');
-          window = windowCreator!(entity);
+          cwindow = windowCreator!(entity);
       }
     } else {
       // Utiliser le type existant pour les autres cas
       const entityCreator = this.entityCreators.get(entityType) || this.entityCreators.get('light');
-      entity = entityCreator!(entity_id, position, state, commandService);
+      entity = entityCreator!(entity_id, position, state, dataService);  // ✅ CHANGER
       const windowCreator = this.windowCreators.get(entityType) || this.windowCreators.get('light');
-      window = windowCreator!(entity);
-    }
-    
-    // S'assurer que l'entité est complètement initialisée
-    if (state) {
-      entity.updateState!(state);
+      cwindow = windowCreator!(entity);
     }
     
     // Lier la fenêtre à l'entité
-    entity.setContextWindow(window);
+    entity.setContextWindow(cwindow);
     
-    return { entity, window };
+    return { entity, cwindow: cwindow };
   }
 
   /**
@@ -190,7 +182,7 @@ export class UnifiedObjectFactory {
       entity_id: string,
       position: { x: number; y: number },
       state?: any,
-      commandService?: CommandService
+      dataService?: DataService  // ✅ CHANGER
     ) => BaseEntity
   ): void {
     this.entityCreators.set(type, creator);
@@ -211,7 +203,6 @@ export class UnifiedObjectFactory {
     if (parts.length < 2) return 'light';
     
     const domain = parts[0];
-    const deviceType = parts[1].split('_')[0];
     
     // Logique de détermination du type
     if (domain === 'light') {
@@ -222,7 +213,6 @@ export class UnifiedObjectFactory {
     if (domain === 'switch') return 'switch';
     
     if (domain === 'sensor') {
-      // Vérifier si l'entity_id contient des mots clés pour déterminer le type
       if (entity_id.includes('temperature')) return 'temperature_sensor';
       if (entity_id.includes('humidity')) return 'humidity_sensor';
       return 'generic_sensor';

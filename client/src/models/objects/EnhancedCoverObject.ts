@@ -1,17 +1,17 @@
-import { BaseEntity } from './BaseEntity';
-import { CommandService } from '../../services/CommandService';
+import { EnhancedSwitchObject } from './EnhancedSwitchObject';
+import { DataService } from '../../services/DataService';
 
-export class EnhancedCoverObject extends BaseEntity {
+export class EnhancedCoverObject extends EnhancedSwitchObject {
   protected isOpen: boolean = false;
   protected currentPosition: number = 0;
 
   constructor(
     entity_id: string,
     position: { x: number; y: number },
-    dimensions: { width: number; height: number } = { width: 80, height: 80 },
-    commandService?: CommandService
+    dimensions: { width: number; height: number } = { width: 32, height: 32 },
+    dataService?: DataService  // ✅ CHANGER
   ) {
-    super(entity_id, position, dimensions, commandService);
+    super(entity_id, position, dimensions, dataService);  // ✅ CHANGER
     this.setVisualStyle('icon'); // Style icône pour afficher uniquement l'icône
     this.setColorScheme({
       primary: '#4CAF50', // Vert
@@ -86,7 +86,7 @@ export class EnhancedCoverObject extends BaseEntity {
     this.isOpen ? this.closeCover() : this.openCover();
   }
 
-  handleAction(action: string): void {
+  handleAction(action: string, value?: any): void {
     switch (action) {
       case 'open':
         this.openCover();

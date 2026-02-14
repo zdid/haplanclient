@@ -10,6 +10,7 @@ export class DragAndDropConstrained {
   private offsetY: number = 0;
   private onDragEnd?:  (finalPosition: {x: number, y: number}) => void;
   private constraintMode: 'full' | 'center';
+  private dragBounds: { minX: number; maxX: number; minY: number; maxY: number } | null = null;
 
   /**
    * @param elementSelector - Sélecteur CSS de l'élément à rendre "draggable".
@@ -90,6 +91,7 @@ export class DragAndDropConstrained {
     console.log(`[TRACE] Écouteurs globaux ajoutés pour le drag`);
 
     const rect = this.element.getBoundingClientRect();
+    const containerRect = this.container.getBoundingClientRect();
     
     // Calculer les offsets en fonction du mode de contrainte
     if (this.constraintMode === 'full') {
@@ -98,6 +100,13 @@ export class DragAndDropConstrained {
       this.offsetX = event.clientX - rect.left;
       this.offsetY = event.clientY - rect.top;
       console.log(`[TRACE] Offset calculé en mode 'full' (coin supérieur gauche):`, {offsetX: this.offsetX, offsetY: this.offsetY});
+
+      this.dragBounds = {
+        minX: containerRect.left,
+        maxX: containerRect.right - rect.width,
+        minY: containerRect.top,
+        maxY: containerRect.bottom - rect.height
+      };
     } else {
       // Mode 'center': offsets calculés par rapport au centre
       // pour correspondre au transform: translate(-50%, -50%)
@@ -106,6 +115,13 @@ export class DragAndDropConstrained {
       this.offsetX = event.clientX - centerX;
       this.offsetY = event.clientY - centerY;
       console.log(`[TRACE] Offset calculé en mode 'center' (centre):`, {offsetX: this.offsetX, offsetY: this.offsetY});
+
+      this.dragBounds = {
+        minX: containerRect.left , // + rect.width / 2,
+        maxX: containerRect.right , // - rect.width / 2,
+        minY: containerRect.top , // + rect.height / 2,
+        maxY: containerRect.bottom // - rect.height / 2
+      };
     }
   };
 
@@ -127,31 +143,32 @@ export class DragAndDropConstrained {
     // Récupère les dimensions du conteneur et de l'élément
     const containerRect = this.container.getBoundingClientRect();
     const elementRect = this.element.getBoundingClientRect();
+    const bounds = this.dragBounds;
 
     // Appliquer les contraintes selon le mode sélectionné
     if (this.constraintMode === 'full') {
       // Mode 'full': l'objet entier doit rester dans la zone
       // Contraintes pour ne pas sortir du conteneur (objet entier dans la zone)
-      newX = Math.max(containerRect.left, Math.min(newX, containerRect.right - elementRect.width));
-      newY = Math.max(containerRect.top, Math.min(newY, containerRect.bottom - elementRect.height));
+      if (bounds) {
+        newX = Math.max(bounds.minX, Math.min(newX, bounds.maxX));
+        newY = Math.max(bounds.minY, Math.min(newY, bounds.maxY));
+      }
       console.log(`[TRACE] Application des contraintes en mode 'full' (objet entier dans la zone)`);
     } else {
       // Mode 'center': seul le centre de l'objet doit rester dans la zone
       // Contraintes pour que le centre de l'élément reste dans le conteneur
-      const centerX = event.clientX - this.offsetX + elementRect.width / 2;
-      const centerY = event.clientY - this.offsetY + elementRect.height / 2;
+      const centerX = event.clientX - this.offsetX;
+      const centerY = event.clientY - this.offsetY;
       
-      const constrainedCenterX = Math.max(
-        containerRect.left + elementRect.width / 2,
-        Math.min(centerX, containerRect.right - elementRect.width / 2)
-      );
-      const constrainedCenterY = Math.max(
-        containerRect.top + elementRect.height / 2,
-        Math.min(centerY, containerRect.bottom - elementRect.height / 2)
-      );
+      const constrainedCenterX = bounds
+        ? Math.max(bounds.minX, Math.min(centerX, bounds.maxX))
+        : centerX;
+      const constrainedCenterY = bounds
+        ? Math.max(bounds.minY, Math.min(centerY, bounds.maxY))
+        : centerY;
       
-      newX = constrainedCenterX - elementRect.width / 2;
-      newY = constrainedCenterY - elementRect.height / 2;
+      newX = constrainedCenterX;
+      newY = constrainedCenterY;
       console.log(`[TRACE] Application des contraintes en mode 'center' (centre dans la zone)`);
     }
 

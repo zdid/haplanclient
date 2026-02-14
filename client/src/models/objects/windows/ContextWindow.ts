@@ -1,5 +1,5 @@
 import { BaseEntity } from '../BaseEntity';
-import { AreaMappingService } from '../../../services/AreaMappingService';
+import { getDataService } from '../../../services/DataService';
 
 export interface ContextWindow {
   entity: BaseEntity;
@@ -25,23 +25,34 @@ export interface ContextWindow {
    * Mise à jour de l'affichage
    */
   updateDisplay?(): void;
-}
 
+  /**
+   * Obtient l'élément HTML de la fenêtre
+   */
+  getElement(): HTMLElement;
+
+  /**
+   * Ajoute un écouteur d'événements
+   */
+  addEventListener(event: string, handler: EventListener): void;
+}
+export function capitalize(str: string ): string  {
+  if(! str) return "";
+  return str.substring(0,1).toUpperCase() + str.substring(1);  
+}
 // Fonction utilitaire pour obtenir le titre formaté
 export function getFormattedWindowTitle(entity: BaseEntity): string {
-  const areaMappingService = AreaMappingService.getInstance();
-  const areaName = areaMappingService.getAreaNameForEntity(entity.getEntity_id());
+  let name = getDataService().getNameEntity(entity.getEntity_id());
+  let area = getDataService().getAreaNameOfEntity(entity.getEntity_id())
+  console.log("getFormattedWindowTitle baseEntity", entity)
+  return capitalize(area) + " - "+ capitalize(name)
+  // const entityParts = entity.getEntity_id().split('.');
+  // const entityName = entityParts.length > 1 ? entityParts[1].replace(/_/g, ' ') : entity.getEntity_id();
   
-  // Extraire le nom de l'entité à partir de l'entity_id
-  const entityParts = entity.getEntity_id().split('.');
-  const entityName = entityParts.length > 1 ? entityParts[1].replace(/_/g, ' ') : entity.getEntity_id();
+  // // Formater le titre
   
-  // Formater le titre
-  if (areaName) {
-    return `${areaName} - ${entityName}`;
-  } else {
-    return entityName;
-  }
+  // return capitalize(entityName);
+  
 }
 
 // Fonction utilitaire pour appliquer la taille de police

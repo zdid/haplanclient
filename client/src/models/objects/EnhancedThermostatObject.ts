@@ -1,19 +1,19 @@
 import { BaseEntity } from './BaseEntity';
-import { CommandService } from '../../services/CommandService';
+import { DataService } from '../../services/DataService';
 
 export class EnhancedThermostatObject extends BaseEntity {
-  protected currentTemperature: number = 0;
-  protected targetTemperature: number = 0;
+  protected currentTemperature: string | number = 0;
+  protected targetTemperature: string | number = 0;
   protected hvacMode: string = 'off';
   protected temperatureUnit: string = '°C';
 
   constructor(
     entity_id: string,
     position: { x: number; y: number },
-    dimensions: { width: number; height: number } = { width: 100, height: 100 },
-    commandService?: CommandService
+    dimensions: { width: number; height: number } = { width: 32, height: 32 },
+    dataService?: DataService  // ✅ CHANGER
   ) {
-    super(entity_id, position, dimensions, commandService);
+    super(entity_id, position, dimensions, dataService);  // ✅ CHANGER
     this.setVisualStyle('minimal'); // Style minimal pour afficher icône + valeur
     this.setColorScheme({
       primary: '#FF5722', // Orange
@@ -27,9 +27,15 @@ export class EnhancedThermostatObject extends BaseEntity {
     console.log(`[TRACE] EnhancedThermostatObject.updateState() - Mise à jour avec l'état:`, state);
     
     // Extraire les données des attributs avec validation
-    this.currentTemperature = this.extractAttribute(state, 'current_temperature', 0);
-    this.targetTemperature = this.extractAttribute(state, 'temperature', 0);
-    this.hvacMode = state.state || 'off';
+    const rawCurrentTemp = this.extractAttribute(state, 'current_temperature', 0);
+    const rawTargetTemp = this.extractAttribute(state, 'temperature', 0);
+    this.currentTemperature = this.normalizeDisplayValue(rawCurrentTemp);
+    this.targetTemperature = this.normalizeDisplayValue(rawTargetTemp);
+    const rawHvacMode = state.state || 'off';
+    this.hvacMode = typeof rawHvacMode === 'string' ? rawHvacMode : 'off';
+    if (this.hvacMode.toLowerCase() === 'unknown' || this.hvacMode.toLowerCase() === 'unknow') {
+      this.hvacMode = 'off';
+    }
     this.temperatureUnit = this.extractAttribute(state, 'temperature_unit', '°C');
 
     console.log(`[TRACE] EnhancedThermostatObject - Données extraites:`);
@@ -41,7 +47,7 @@ export class EnhancedThermostatObject extends BaseEntity {
     // Note: Utiliser 'current_temperature' pour la température actuelle
     this.setDisplayValue('current_temperature', this.currentTemperature);
     this.setDisplayValue('target_temp', this.targetTemperature);
-    this.setDisplayValue('hvac_mode', this.hvacMode);
+    this.setDisplayValue('hvac_mode', this.normalizeDisplayValue(rawHvacMode));
     this.setDisplayValue('temperature_unit', this.temperatureUnit);
 
     this.updateDisplay();
@@ -64,11 +70,12 @@ export class EnhancedThermostatObject extends BaseEntity {
         return value;
       }
     }
-    console.warn(`[TRACE] EnhancedThermostatObject - Attribut ${attributeName} manquant ou invalide, utilisation de la valeur par défaut:`, defaultValue);
+    //console.warn(`[TRACE] EnhancedThermostatObject - Attribut ${attributeName} manquant ou invalide, utilisation de la valeur par défaut:`, defaultValue);
     return defaultValue;
   }
 
   renderEntity(): HTMLElement {
+    console.log("[TRACE] renderEntity ", this.entity_id)
     const container = this.createStyledElement('div', 'enhanced-thermostat-object');
     container.style.display = 'flex';
     container.style.alignItems = 'center';
@@ -83,36 +90,47 @@ export class EnhancedThermostatObject extends BaseEntity {
     if (iconElement) {
       iconElement.style.color = '#FFFFFF';
     }
+    
+    // Appliquer la colorisation initiale basée sur l'état actuel
+    this.updateDisplay();
 
     // Créer l'affichage des températures (actuelle et cible)
     const tempDisplay = this.createStyledElement('div', 'thermostat-temp-display');
     tempDisplay.style.display = 'flex';
     tempDisplay.style.flexDirection = 'column';
     tempDisplay.style.alignItems = 'flex-start';
-    tempDisplay.style.fontSize = '16px';
-    tempDisplay.style.color = '#FFFFFF';
+    tempDisplay.style.color = '#ffffff';
     tempDisplay.style.lineHeight = '1.2';
 
-    // Température cible (en gras)
+    // Ligne principale: icône + température cible
+    const mainRow = this.createStyledElement('div', 'thermostat-main-row');
+    mainRow.style.display = 'flex';
+    mainRow.style.alignItems = 'center';
+    mainRow.style.gap = '6px';
+
+    // Température cible
     const targetTemp = this.createStyledElement('div', 'thermostat-target-temp');
-    targetTemp.textContent = `${this.targetTemperature}${this.temperatureUnit}`;
-    targetTemp.style.fontSize = '20px';
-    targetTemp.style.fontWeight = 'bold';
+    targetTemp.textContent = this.targetTemperature === 'N/A'
+      ? 'N/A'
+      : `${this.targetTemperature}${this.temperatureUnit}`;
+    targetTemp.style.fontWeight = 'normal';
     targetTemp.style.display = 'block';
 
     // Température actuelle (plus petite)
     const currentTemp = this.createStyledElement('div', 'thermostat-current-temp');
-    currentTemp.textContent = `act: ${this.currentTemperature}${this.temperatureUnit}`;
-    currentTemp.style.fontSize = '12px';
+    currentTemp.textContent = this.currentTemperature === 'N/A'
+      ? 'act: N/A'
+      : `act: ${this.currentTemperature}${this.temperatureUnit}`;
     currentTemp.style.opacity = '0.8';
     currentTemp.style.display = 'block';
 
     // Assembler les températures
-    tempDisplay.appendChild(targetTemp);
+    mainRow.appendChild(icon);
+    mainRow.appendChild(targetTemp);
+    tempDisplay.appendChild(mainRow);
     tempDisplay.appendChild(currentTemp);
 
-    // Assembler les éléments (icône + températures)
-    container.appendChild(icon);
+    // Assembler les éléments (températures)
     container.appendChild(tempDisplay);
 
     // Ajouter un gestionnaire de clic pour ouvrir la fenêtre modale
@@ -123,29 +141,40 @@ export class EnhancedThermostatObject extends BaseEntity {
 
     return container;
   }
-
+  
   updateDisplay(): void {
+    console.log("updateDisplay", this.entity_id,"element:", Boolean(this.element))
+    
     if (!this.element) return;
 
     // Mettre à jour l'icône en fonction du mode
     const icon = this.element.querySelector('.entity-icon') as HTMLElement;
+    console.log("have icon", icon)
     if (icon) {
       const thermostatIcon = icon.querySelector('i') as HTMLElement;
+      console.log("y a t il un thermosIcon", Boolean(thermostatIcon))
       if (thermostatIcon) {
         let iconClass = 'fa-thermometer-half';
         let color = this.colorScheme.primary;
         
         // Si éteint, toujours gris
         if (this.hvacMode === 'off') {
+          console.log("isoff")
           iconClass = 'fa-thermometer-half';
           color = '#999999';
         } else {
+
           // Déterminer la couleur en fonction de la température cible
-          if (this.targetTemperature <= 18) {
+          if (this.targetTemperature === 'N/A') {
+            color = '#999999';
+          } else if (this.targetTemperature <= 18) {
+            console.log("temp < 18")
             color = '#2196F3'; // Bleu
           } else if (this.targetTemperature >= 21) {
+            console.log("temp > 21")
             color = '#F44336'; // Rouge
           } else {
+            console.log("entre 18 et 21")
             // Entre 18 et 21: dégradé ou mélange
             color = '#9C27B0'; // Violet (mélange)
           }
@@ -172,12 +201,16 @@ export class EnhancedThermostatObject extends BaseEntity {
     // Mettre à jour l'affichage des températures
     const targetTemp = this.element.querySelector('.thermostat-target-temp') as HTMLElement;
     if (targetTemp) {
-      targetTemp.textContent = `${this.targetTemperature}${this.temperatureUnit}`;
+      targetTemp.textContent = this.targetTemperature === 'N/A'
+        ? 'N/A'
+        : `${this.targetTemperature}${this.temperatureUnit}`;
     }
     
     const currentTemp = this.element.querySelector('.thermostat-current-temp') as HTMLElement;
     if (currentTemp) {
-      currentTemp.textContent = `act: ${this.currentTemperature}${this.temperatureUnit}`;
+      currentTemp.textContent = this.currentTemperature === 'N/A'
+        ? 'act: N/A'
+        : `act: ${this.currentTemperature}${this.temperatureUnit}`;
     }
   }
 

@@ -56,7 +56,7 @@ export class ContextWindowManager {
     }
   }
 
-  showWindow(entity: BaseEntity, window: ContextWindow): void {
+  showWindow(entity: BaseEntity, cwindow: ContextWindow): void {
     console.log(`[TRACE] ContextWindowManager.showWindow() - Affichage de la fenêtre pour ${entity.getEntity_id()}`);
     
     // Fermer la fenêtre actuelle si elle existe
@@ -66,29 +66,35 @@ export class ContextWindowManager {
     }
 
     // Stocker la fenêtre actuelle
-    this.currentWindow = window;
+    this.currentWindow = cwindow;
     console.log(`[TRACE] ContextWindowManager - Nouvelle fenêtre stockée`);
 
     // Positionner la fenêtre près de l'entité
-    this.positionWindowNearEntity(entity, window.element);
+    this.positionWindowNearEntity(entity, cwindow.element);
 
     // Appliquer la taille de police à la fenêtre
-    this.applyFontSizeToWindow(window.element);
+    this.applyFontSizeToWindow(cwindow.element);
 
     // Ajouter la fenêtre au conteneur
-    this.container.appendChild(window.element);
+    this.container.appendChild(cwindow.element);
+
+    // Autoriser les clics uniquement sur la fenêtre elle-meme
+    cwindow.element.style.pointerEvents = 'auto';
 
     // Empêcher la propagation des clics depuis la fenêtre vers l'overlay
-    window.element.addEventListener('click', (e) => {
+    cwindow.element.addEventListener('click', (e) => {
         console.log(`[TRACE] ContextWindowManager - Clic sur la fenêtre intercepté pour ${entity.getEntity_id()}`);
         e.stopPropagation();
     });
 
     // Afficher l'overlay
     this.overlay.style.display = 'block';
+    this.overlay.style.pointerEvents = 'auto';
 
-    // Activer les événements de pointer sur le conteneur
-    this.container.style.pointerEvents = 'auto';
+    // Laisser passer les clics vers l'overlay sauf pour la fenêtre
+    this.container.style.pointerEvents = 'none';
+
+    window.dispatchEvent(new CustomEvent('context-window-opened'));
 
     // Fermer la fenêtre quand on clique sur l'overlay (mais pas sur la fenêtre)
     this.overlay.onclick = (e) => {
@@ -107,7 +113,12 @@ export class ContextWindowManager {
     document.addEventListener('keydown', this.handleKeyDown);
     
     // Ajouter un écouteur pour le redimensionnement
-    window.addEventListener('resize', this.handleResize);
+    try {
+      window.addEventListener('resize', this.handleResize);
+      
+    } catch (error) {
+      console.warn('[WARN] ContexteWindowManager: pas possible de mettre le addeventlistener sur le window (resize) a corriger des que possible')    
+    }
   }
 
   // Méthode pour appliquer la taille de police à une fenêtre
@@ -146,9 +157,12 @@ export class ContextWindowManager {
 
     // Masquer l'overlay
     this.overlay.style.display = 'none';
+    this.overlay.style.pointerEvents = 'none';
 
     // Désactiver les événements de pointer
     this.container.style.pointerEvents = 'none';
+
+    window.dispatchEvent(new CustomEvent('context-window-closed'));
 
     // Retirer l'écouteur de touche
     document.removeEventListener('keydown', this.handleKeyDown);

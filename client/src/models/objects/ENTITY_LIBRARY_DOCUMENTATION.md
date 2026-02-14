@@ -45,10 +45,10 @@ La classe `BaseEntity` étend `HAObject` et fournit les fonctionnalités suivant
 
 ```typescript
 import { EnhancedObjectFactory } from './EnhancedObjectFactory';
-import { CommandService } from '../../services/CommandService';
+import { DataService } from '../../services/DataService';
 
 // Créer un service de commande (optionnel)
-const commandService = new CommandService();
+const commandService = new DataService();
 
 // Créer une entité lumière
 const lightEntity = EnhancedObjectFactory.createObject(

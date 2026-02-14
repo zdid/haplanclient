@@ -1,13 +1,15 @@
 import { HAObject } from './HAObject';
-import { CommandService } from '../../services/CommandService';
 import { ContextWindowManager } from './windows/ContextWindowManager';
 import { ContextWindow } from './windows/ContextWindow';
+import { DataService } from '../../services/DataService';
 
 export abstract class BaseEntity extends HAObject {
   protected dimensions: { width: number; height: number };
+  protected baseDimensions: { width: number; height: number };
   protected displayValues: Map<string, string | number> = new Map();
   protected visualStyle: 'icon' | 'card' | 'gauge' | 'slider' | 'minimal' = 'icon';
   private contextWindow: ContextWindow | null = null;
+  protected dataService: DataService;
   protected colorScheme: {
     primary: string;
     secondary: string;
@@ -18,13 +20,14 @@ export abstract class BaseEntity extends HAObject {
   constructor(
     entity_id: string,
     position: { x: number; y: number },
-    dimensions: { width: number; height: number } = { width: 60, height: 60 },
-    commandService?: CommandService
+    dimensions: { width: number; height: number } = { width: 24, height: 24 },
+    dataService?: DataService
   ) {
-    super(entity_id, position, commandService);
+    super(entity_id, position, dataService);
+    this.dataService = dataService!;
     this.dimensions = dimensions;
+    this.baseDimensions = { ...dimensions };
     
-    // Schéma de couleurs par défaut
     this.colorScheme = {
       primary: '#4285F4',
       secondary: '#34A853',
@@ -35,8 +38,19 @@ export abstract class BaseEntity extends HAObject {
 
   // Méthode pour définir les valeurs à afficher
   setDisplayValue(key: string, value: string | number): void {
-    this.displayValues.set(key, value);
+    const normalizedValue = this.normalizeDisplayValue(value);
+    this.displayValues.set(key, normalizedValue);
     this.updateDisplay();
+  }
+
+  protected normalizeDisplayValue(value: string | number): string | number {
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase();
+      if (normalized === 'unknown' || normalized === 'unknow') {
+        return 'N/A';
+      }
+    }
+    return value;
   }
 
   // Méthode pour obtenir une valeur à afficher
@@ -58,6 +72,17 @@ export abstract class BaseEntity extends HAObject {
 
   // Méthode pour définir les dimensions
   setDimensions(width: number, height: number): void {
+    this.baseDimensions = { width, height };
+    this.dimensions = { width, height };
+    if (this.element) {
+      this.element.style.width = `${width}px`;
+      this.element.style.height = `${height}px`;
+    }
+  }
+
+  applyScale(scale: number): void {
+    const width = Math.round(this.baseDimensions.width * scale);
+    const height = Math.round(this.baseDimensions.height * scale);
     this.dimensions = { width, height };
     if (this.element) {
       this.element.style.width = `${width}px`;
@@ -69,7 +94,7 @@ export abstract class BaseEntity extends HAObject {
   getDimensions(): { width: number; height: number } {
     return this.dimensions;
   }
-
+  
   // Méthode pour définir le schéma de couleurs
   setColorScheme(scheme: {
     primary?: string;
@@ -87,6 +112,9 @@ export abstract class BaseEntity extends HAObject {
   // Implémentation de la méthode render de HAObject
   render(): HTMLElement {
     const container = this.renderEntity();
+
+    // S'assurer que l'élément a un ID stable
+    this.ensureElementHasId(container);
     
     // Appliquer les dimensions
     container.style.width = `${this.dimensions.width}px`;
@@ -100,8 +128,29 @@ export abstract class BaseEntity extends HAObject {
     
     // Appliquer la classe de base
     container.classList.add('base-entity', 'ha-object');
+
+    const entity = this.dataService?.getEntity(this.entity_id);
+    console.log('[TRACE] BaseEntity.render entity data:', {
+      entity_id: this.entity_id,
+      hasEntity: !!entity,
+      area_name: entity?.area_name,
+      device_name: entity?.device_name,
+      name: entity?.name
+    });
+    if (entity?.area_name) {
+      container.dataset.areaName = entity.area_name;
+    }
+    if (entity?.device_name) {
+      container.dataset.deviceName = entity.device_name;
+    }
+    if (entity?.name) {
+      container.dataset.entityName = entity.name;
+    }
     
     this.element = container;
+    if (this.contextWindow) {
+      this.setupClickHandler();
+    }
     return container;
   }
 
@@ -232,11 +281,52 @@ export abstract class BaseEntity extends HAObject {
   protected setupClickHandler(): void {
     if (this.element) {
       this.element.style.cursor = 'pointer';
+      console.log('[TRACE] BaseEntity.setupClickHandler: listeners attached', {
+        entity_id: this.entity_id,
+        hasElement: !!this.element
+      });
+      this.element.addEventListener('mouseenter', () => {
+        console.log('[TRACE] BaseEntity.mouseenter', { entity_id: this.entity_id });
+        this.emitHoveredEntityLabel();
+      });
       this.element.addEventListener('click', (e) => {
         e.stopPropagation();
+        console.log('[TRACE] BaseEntity.click', { entity_id: this.entity_id });
+        this.emitHoveredEntityLabel();
         this.onClick();
       });
     }
+  }
+
+  private emitHoveredEntityLabel(): void {
+    const labelParts: string[] = [];
+    const element = this.element;
+
+    console.log('[TRACE] BaseEntity.emitHoveredEntityLabel dataset:', {
+      entity_id: this.entity_id,
+      areaName: element?.dataset.areaName,
+      deviceName: element?.dataset.deviceName,
+      entityName: element?.dataset.entityName
+    });
+
+    if (element?.dataset.areaName) {
+      labelParts.push(element.dataset.areaName);
+    }
+    if (element?.dataset.deviceName) {
+      labelParts.push(element.dataset.deviceName);
+    }
+    if (element?.dataset.entityName) {
+      labelParts.push(element.dataset.entityName);
+    }
+
+    if (labelParts.length === 0) {
+      console.log('[TRACE] BaseEntity.emitHoveredEntityLabel: no label parts');
+      return;
+    }
+
+    const label = labelParts.join(' / ');
+    console.log('[TRACE] BaseEntity.emitHoveredEntityLabel label:', label);
+    window.dispatchEvent(new CustomEvent('ha-object-focus', { detail: { label } }));
   }
 
   // Méthode appelée lors du clic
@@ -247,6 +337,9 @@ export abstract class BaseEntity extends HAObject {
       // En mode paramétrage, ignorer les clics (pas de fenêtres modales)
       console.log('[TRACE] BaseEntity - Clic ignoré : mode paramétrage, pas d\'ouverture de fenêtre');
     } else {
+      if (this.entity_id.startsWith('sensor.')) {
+        return;
+      }
       // En mode normal, ouvrir la fenêtre modale
       if (this.contextWindow) {
         const windowManager = ContextWindowManager.getInstance();

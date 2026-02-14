@@ -13,16 +13,16 @@ export class LightWindow implements ContextWindow {
   }
 
   render(): HTMLElement {
-    const window = document.createElement('div');
-    window.className = 'context-window light-window';
+    const cwindow = document.createElement('div');
+    cwindow.className = 'context-window light-window';
     
     // Appliquer les styles de base pour les fenêtres contextuelles
-    window.style.backgroundColor = 'rgba(0, 0, 0, 0.8)'; // Fond semi-transparent
-    window.style.color = '#FFFFFF'; // Texte blanc
-    window.style.padding = '15px';
-    window.style.borderRadius = '8px';
-    window.style.minWidth = '250px';
-    window.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.3)';
+    cwindow.style.backgroundColor = 'rgba(0, 0, 0, 0.8)'; // Fond semi-transparent
+    cwindow.style.color = '#FFFFFF'; // Texte blanc
+    cwindow.style.padding = '15px';
+    cwindow.style.borderRadius = '8px';
+    cwindow.style.minWidth = '250px';
+    cwindow.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.3)';
 
     // Titre formaté avec area - entity name
     const title = document.createElement('h3');
@@ -31,10 +31,10 @@ export class LightWindow implements ContextWindow {
     title.style.color = '#FFFFFF';
     title.style.borderBottom = '1px solid rgba(255, 255, 255, 0.2)';
     title.style.paddingBottom = '10px';
-    window.appendChild(title);
+    cwindow.appendChild(title);
     
     // Appliquer la taille de police
-    applyFontSizeToWindow(window);
+    applyFontSizeToWindow(cwindow);
 
     // Boutons Allumer et Éteindre
     const buttonsContainer = document.createElement('div');
@@ -53,6 +53,7 @@ export class LightWindow implements ContextWindow {
     offBtn.style.cursor = 'pointer';
     offBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      console.log("lightwindow clic on eteindre")
       this.onAction('turn_off');
     });
     buttonsContainer.appendChild(offBtn);
@@ -68,11 +69,12 @@ export class LightWindow implements ContextWindow {
     onBtn.style.cursor = 'pointer';
     onBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      console.log("lightwindow clic on allumer")
       this.onAction('turn_on');
     });
     buttonsContainer.appendChild(onBtn);
 
-    window.appendChild(buttonsContainer);
+    cwindow.appendChild(buttonsContainer);
 
     // Contrôle de luminosité (si supporté)
     if (this.entity instanceof EnhancedLightObject) {
@@ -103,13 +105,14 @@ export class LightWindow implements ContextWindow {
         brightnessValue.textContent = (e.target as HTMLInputElement).value;
       });
 
-      window.appendChild(brightnessContainer);
+      cwindow.appendChild(brightnessContainer);
     }
 
-    return window;
+    return cwindow;
   }
 
   onAction(action: string, value?: any): void {
+    console.log("lightwindow", "onaction",action)
     switch (action) {
       case 'toggle':
         this.entity.handleAction('toggle');
@@ -153,5 +156,14 @@ export class LightWindow implements ContextWindow {
 
   close(): void {
     // Rien à faire ici, la fermeture est gérée par le gestionnaire
+  }
+   // ✅ AJOUTER
+  getElement(): HTMLElement {
+    return this.element;
+  }
+
+  // ✅ AJOUTER
+  addEventListener(event: string, handler: (e: Event) => void): void {
+    this.element.addEventListener(event, handler);
   }
 }

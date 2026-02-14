@@ -2,7 +2,7 @@ import { BaseEntity } from './BaseEntity';
 import { EnhancedLightObject } from './EnhancedLightObject';
 import { MinimalLightObject } from './MinimalLightObject';
 import { EnhancedTemperatureSensor } from './EnhancedTemperatureSensor';
-import { CommandService } from '../../services/CommandService';
+import { DataService } from '../../services/DataService';
 
 export class EnhancedObjectFactory {
   static createObject(
@@ -10,7 +10,7 @@ export class EnhancedObjectFactory {
     type: string,
     position: { x: number; y: number },
     state?: any,
-    commandService?: CommandService,
+    commandService?: DataService,
     dimensions?: { width: number; height: number },
     style: 'default' | 'minimal' = 'default'
   ): BaseEntity {
@@ -55,32 +55,32 @@ export class EnhancedObjectFactory {
     }
 
     // Pour les autres types, créer une entité générique
-    return this.createGenericEntity(entity_id, position, finalDimensions, commandService);
+    return this.createGenericEntity(entity_id,  position, finalDimensions, commandService);
   }
 
   private static getDefaultDimensions(entity_id: string): { width: number; height: number } {
     // Dimensions par défaut en fonction du type d'entité
     if (entity_id.startsWith('light.')) {
-      return { width: 80, height: 80 };
+      return { width: 40, height: 40 };
     }
     if (entity_id.startsWith('sensor.') && entity_id.includes('temperature')) {
-      return { width: 100, height: 100 };
+      return { width: 50, height: 50 };
     }
     if (entity_id.startsWith('climate.')) {
-      return { width: 120, height: 100 };
+      return { width: 70, height: 60 };
     }
     if (entity_id.startsWith('cover.')) {
-      return { width: 90, height: 90 };
+      return { width: 45, height: 45 };
     }
     // Dimensions par défaut pour les autres entités
-    return { width: 70, height: 70 };
+    return { width: 35, height: 35 };
   }
 
   private static createGenericEntity(
     entity_id: string,
     position: { x: number; y: number },
     dimensions: { width: number; height: number },
-    commandService?: CommandService
+    commandService?: DataService
   ): BaseEntity {
     // Créer une classe générique qui hérite de BaseEntity
     class GenericEntity extends BaseEntity {
@@ -88,7 +88,7 @@ export class EnhancedObjectFactory {
         entity_id: string,
         position: { x: number; y: number },
         dimensions: { width: number; height: number },
-        commandService?: CommandService
+        commandService?: DataService
       ) {
         super(entity_id, position, dimensions, commandService);
         this.setVisualStyle('icon');

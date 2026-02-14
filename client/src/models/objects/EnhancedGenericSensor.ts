@@ -1,5 +1,5 @@
 import { BaseEntity } from './BaseEntity';
-import { CommandService } from '../../services/CommandService';
+import { DataService } from '../../services/DataService';
 
 export class EnhancedGenericSensor extends BaseEntity {
   protected sensorValue: string | number = '';
@@ -10,10 +10,10 @@ export class EnhancedGenericSensor extends BaseEntity {
     entity_id: string,
     position: { x: number; y: number },
     sensorType: string = 'default',
-    dimensions: { width: number; height: number } = { width: 80, height: 80 },
-    commandService?: CommandService
+    dimensions: { width: number; height: number } = { width: 32, height: 32 },
+    dataService?: DataService
   ) {
-    super(entity_id, position, dimensions, commandService);
+    super(entity_id, position, dimensions, dataService);
     this.sensorType = sensorType;
     this.setVisualStyle('minimal'); // Style minimal pour afficher uniquement la valeur
     this.setColorScheme(this.getColorSchemeForType(sensorType));
@@ -66,7 +66,8 @@ export class EnhancedGenericSensor extends BaseEntity {
   }
 
   updateState(state: any): void {
-    this.sensorValue = state.state || '';
+    const rawValue = state.state || '';
+    this.sensorValue = this.normalizeDisplayValue(rawValue);
     this.unit = state.attributes?.unit_of_measurement || '';
 
     this.updateDisplay();
@@ -77,9 +78,11 @@ export class EnhancedGenericSensor extends BaseEntity {
 
     // Créer uniquement l'affichage de la valeur (affichage simplifié)
     const valueDisplay = this.createStyledElement('div', 'sensor-value-display');
-    valueDisplay.textContent = `${this.sensorValue}${this.unit ? ` ${this.unit}` : ''}`;
-    valueDisplay.style.fontSize = '20px';
-    valueDisplay.style.fontWeight = 'bold';
+    const formattedValue = this.sensorValue === 'N/A'
+      ? 'N/A'
+      : `${this.sensorValue}${this.unit ? ` ${this.unit}` : ''}`;
+    valueDisplay.textContent = formattedValue;
+    valueDisplay.style.fontWeight = 'normal';
     valueDisplay.style.color = '#FFFFFF'; // Texte blanc pour le contraste
 
     // Assembler les éléments (uniquement la valeur)
@@ -100,7 +103,10 @@ export class EnhancedGenericSensor extends BaseEntity {
     // Mettre à jour uniquement la valeur
     const valueDisplay = this.element.querySelector('.sensor-value-display') as HTMLElement;
     if (valueDisplay) {
-      valueDisplay.textContent = `${this.sensorValue}${this.unit ? ` ${this.unit}` : ''}`;
+      const formattedValue = this.sensorValue === 'N/A'
+        ? 'N/A'
+        : `${this.sensorValue}${this.unit ? ` ${this.unit}` : ''}`;
+      valueDisplay.textContent = formattedValue;
     }
   }
 

@@ -1,12 +1,12 @@
+import { DataService } from '../../services/DataService';
 import { EnhancedLightObject } from './EnhancedLightObject';
-import { CommandService } from '../../services/CommandService';
 
 export class MinimalLightObject extends EnhancedLightObject {
   constructor(
     entity_id: string,
     position: { x: number; y: number },
     dimensions: { width: number; height: number } = { width: 32, height: 32 },
-    commandService?: CommandService
+    commandService?: DataService
   ) {
     super(entity_id, position, dimensions, commandService);
     

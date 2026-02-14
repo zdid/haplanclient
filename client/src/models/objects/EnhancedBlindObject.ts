@@ -1,36 +1,38 @@
 import { EnhancedCoverObject } from './EnhancedCoverObject';
-import { CommandService } from '../../services/CommandService';
+import { DataService } from '../../services/DataService';
 
 export class EnhancedBlindObject extends EnhancedCoverObject {
   constructor(
     entity_id: string,
     position: { x: number; y: number },
-    dimensions: { width: number; height: number } = { width: 80, height: 80 },
-    commandService?: CommandService
+    dimensions: { width: number; height: number } = { width: 32, height: 32 },
+    dataService?: DataService  // ✅ CHANGER commandService en dataService
   ) {
-    super(entity_id, position, dimensions, commandService);
+    super(entity_id, position, dimensions, dataService);  // ✅ CHANGER
     
-    // Personnalisation pour les stores
+    // Couleurs spécifiques pour les stores
     this.setColorScheme({
-      primary: '#2196F3', // Bleu
-      secondary: '#64B5F6', // Bleu clair
+      primary: '#9C27B0', // Violet
+      secondary: '#BA68C8',
       background: 'transparent',
-      text: '#FFFFFF' // Blanc pour le contraste sur fond noir
+      text: '#FFFFFF'
     });
   }
 
-  renderEntity(): HTMLElement {
-    const container = super.renderEntity();
-    
-    // Remplacer l'icône par une icône de store
-    const icon = container.querySelector('.entity-icon') as HTMLElement;
-    if (icon) {
-      const blindIcon = icon.querySelector('i') as HTMLElement;
-      if (blindIcon) {
-        blindIcon.className = 'fas fa-blinds';
-      }
+  protected getIconForState(): string {
+    // Store: rideau ouvert/fermé
+    return this.isOn ? 'fa-window-maximize' : 'fa-window-minimize';
+  }
+
+  handleAction(action: string, value?: any): void {
+    if (action === 'open') {
+      this.sendCommand('cover', 'open_cover');
+    } else if (action === 'close') {
+      this.sendCommand('cover', 'close_cover');
+    } else if (action === 'stop') {
+      this.sendCommand('cover', 'stop_cover');
+    } else {
+      super.handleAction(action, value);
     }
-    
-    return container;
   }
 }
