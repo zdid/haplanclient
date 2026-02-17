@@ -5,6 +5,8 @@ import { FloorplanManager } from './managers/FloorplanManager';
 import { UIInitializer, UIContainers } from './managers/UIInitializer';
 import { PreferencesManager } from './managers/PreferencesManager';
 import { DataService } from './services/DataService';
+import { HAAuthComponent } from './components/HAAuthComponent';
+import { HomeAssistantAuth } from './auth/ha-auth';
 import './styles/styles.css';
 
 const WS_URL = 'ws://localhost:3000';
@@ -13,102 +15,82 @@ const API_BASE_URL = 'http://localhost:3000';
 export class App {
   private dataService: DataService;
   private containers: UIContainers;
-  private floorplanManager: FloorplanManager;
-  private entitySelector: EntitySelector;
+  private floorplanManager!: FloorplanManager;
+  private entitySelector!: EntitySelector;
   private preferencesManager: PreferencesManager;
-  private menuSystem: MenuSystem;
+  private menuSystem!: MenuSystem;
   private unsubscribeRefresh: (() => void) | null = null;
+  private authComponent: HAAuthComponent | null = null;
+  private isAuthChecked: boolean = false;
 
   constructor() {
     console.log('[App] Construction');
-    
-    // 1. Initialiser les containers UI
     this.containers = UIInitializer.initialize();
-
-    // 2. Créer les services
     this.dataService = new DataService(WS_URL, API_BASE_URL);
     this.preferencesManager = new PreferencesManager();
-
-    // 3. Créer EntitySelector
-    const entitySelectorContainer = document.createElement('div');
-    this.entitySelector = new EntitySelector(
-      entitySelectorContainer,
-      async (entity_id: string) => {
-        await this.handleEntitySelect(entity_id);
-      }
-    );
-
-    // 4. Créer FloorplanManager (gère plusieurs plans)
-    this.floorplanManager = new FloorplanManager(
-      this.containers.selectorContainer,
-      this.containers.floorPlanContainer,
-      this.dataService,
-      this.entitySelector,
-      this.preferencesManager
-    );
-
-    // 5. Créer MenuSystem
-    this.menuSystem = new MenuSystem(
-      this.dataService,
-      this.containers.mainContainer,
-      (isEditing: boolean) => {
-        console.log('[App] Mode édition:', isEditing);
-        this.floorplanManager.setEditMode(isEditing);
-      },
-      this.preferencesManager
-    );
-
-    this.menuSystem.setPlanScaleChangeCallback((scale: number) => {
-      this.floorplanManager.setObjectScale(scale);
-    });
-
-    this.menuSystem.setFloorplanChangeCallback(async (floorplanId: string) => {
-      await this.floorplanManager.showFloorplan(floorplanId);
-    });
-
-    // Connecter le MenuSystem au FloorplanManager pour l'affichage du nom
-    this.floorplanManager.setMenuSystem(this.menuSystem);
-
-    // 7. Intégrer EntitySelector au menu
-    this.menuSystem.integrateEntitySelector(this.entitySelector.getElement());
-
-    this.menuSystem.notifyPlanScaleFromStorage();
-
-    // 8. S'abonner aux changements de préférences
-    this.preferencesManager.subscribe(() => {
-      console.log('[App] Préférences mises à jour');
-      const currentFloorPlan = this.floorplanManager.getCurrentFloorPlan();
-      if (currentFloorPlan) {
-        currentFloorPlan.updatePreferences(
-          this.preferencesManager.getFontSize(),
-          this.preferencesManager.getFontColor()
-        );
-      }
-    });
-
-    // 9. Écouter les refresh du serveur
-    this.unsubscribeRefresh = this.dataService.on('refresh', () => {
-      console.log('[App] refresh reçu du serveur');
-      this.handleRefresh();
-    });
-
-    window.addEventListener('ha-object-focus', (event: Event) => {
-      const customEvent = event as CustomEvent<{ label: string }>;
-      if (customEvent.detail?.label) {
-        this.menuSystem.setHoveredEntityLabel(customEvent.detail.label);
-      }
-    });
-
     console.log('[App] Construction terminée');
   }
 
   // Initialiser l'application
   async initialize(): Promise<void> {
     try {
-      console.log('[App] Initialisation - En attente du refresh du serveur');
-      console.log('[App] Application initialisée et prête à recevoir les données');
+      console.log('[App] Initialisation - Vérification authentification');
+      const savedUrl = localStorage.getItem('haUrl');
+      if (savedUrl) {
+        await HomeAssistantAuth.init(savedUrl);
+      }
+      if (HomeAssistantAuth.isAuthenticated()) {
+        console.log('[App] Utilisateur déjà authentifié');
+        await this.initializeMainApp();
+      } else {
+        console.log('[App] Aucun utilisateur authentifié trouvé');
+        this.showAuthForm();
+      }
     } catch (error) {
       console.error('[App] Erreur lors de l\'initialisation:', error);
+      this.showAuthForm();
+    }
+  }
+  private   static async handleLogin(url: string): Promise<void> {
+    localStorage.setItem('haUrl', url); // Remplace par l'URL de ton Home Assistant
+    await HomeAssistantAuth.init(url);
+    await HomeAssistantAuth.authenticate();
+  }
+
+  
+  // Afficher le formulaire d'authentification
+  private showAuthForm(): void {
+    console.log('[App] Affichage du formulaire d\'authentification');
+    
+    // Masquer le contenu principal
+    this.containers.mainContainer.style.display = 'none';
+    
+    // Créer un conteneur pour l'authentification
+    const authContainer = document.createElement('div');
+    authContainer.id = 'auth-container';
+    authContainer.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #f5f5f5;
+      z-index: 10000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    `;
+    
+    document.body.appendChild(authContainer);
+    
+    // Créer le composant d'authentification
+    this.authComponent = new HAAuthComponent(authContainer);
+    
+    // Initialiser avec l'URL sauvegardée si elle existe
+    const savedUrl = localStorage.getItem('haUrl');
+    if (savedUrl) {
+      HomeAssistantAuth.init(savedUrl);
+      this.authComponent.updateUI();
     }
   }
 
@@ -217,8 +199,88 @@ export class App {
     }
   }
 
+  // Initialiser l'application principale (après authentification)
+  private async initializeMainApp(): Promise<void> {
+    // 3. Créer EntitySelector
+    const entitySelectorContainer = document.createElement('div');
+    this.entitySelector = new EntitySelector(
+      entitySelectorContainer,
+      async (entity_id: string) => {
+        await this.handleEntitySelect(entity_id);
+      }
+    );
+
+    // 4. Créer FloorplanManager (gère plusieurs plans)
+    this.floorplanManager = new FloorplanManager(
+      this.containers.selectorContainer,
+      this.containers.floorPlanContainer,
+      this.dataService,
+      this.entitySelector,
+      this.preferencesManager
+    );
+
+    // 5. Créer MenuSystem
+    this.menuSystem = new MenuSystem(
+      this.dataService,
+      this.containers.mainContainer,
+      (isEditing: boolean) => {
+        console.log('[App] Mode édition:', isEditing);
+        this.floorplanManager.setEditMode(isEditing);
+      },
+      this.preferencesManager
+    );
+
+    this.menuSystem.setPlanScaleChangeCallback((scale: number) => {
+      this.floorplanManager.setObjectScale(scale);
+    });
+
+    this.menuSystem.setFloorplanChangeCallback(async (floorplanId: string) => {
+      await this.floorplanManager.showFloorplan(floorplanId);
+    });
+
+    // Connecter le MenuSystem au FloorplanManager pour l'affichage du nom
+    this.floorplanManager.setMenuSystem(this.menuSystem);
+
+    // 7. Intégrer EntitySelector au menu
+    this.menuSystem.integrateEntitySelector(this.entitySelector.getElement());
+
+    this.menuSystem.notifyPlanScaleFromStorage();
+
+    // 8. S'abonner aux changements de préférences
+    this.preferencesManager.subscribe(() => {
+      console.log('[App] Préférences mises à jour');
+      const currentFloorPlan = this.floorplanManager.getCurrentFloorPlan();
+      if (currentFloorPlan) {
+        currentFloorPlan.updatePreferences(
+          this.preferencesManager.getFontSize(),
+          this.preferencesManager.getFontColor()
+        );
+      }
+    });
+
+    // 9. Écouter les refresh du serveur
+    this.unsubscribeRefresh = this.dataService.on('refresh', () => {
+      console.log('[App] refresh reçu du serveur');
+      this.handleRefresh();
+    });
+
+    window.addEventListener('ha-object-focus', (event: Event) => {
+      const customEvent = event as CustomEvent<{ label: string }>;
+      if (customEvent.detail?.label) {
+        this.menuSystem.setHoveredEntityLabel(customEvent.detail.label);
+      }
+    });
+
+    console.log('[App] Construction terminée');
+  }
+
   // Nettoyage
   cleanup(): void {
+    // Nettoyer le composant d'authentification
+    if (this.authComponent) {
+      this.authComponent.cleanup();
+    }
+    
     // Désabonner les listeners
     if (this.unsubscribeRefresh) {
       this.unsubscribeRefresh();

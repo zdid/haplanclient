@@ -1,0 +1,1 @@
+export { HomeAssistantAuth } from './ha-auth';

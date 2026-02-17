@@ -165,12 +165,13 @@ export class EnhancedThermostatObject extends BaseEntity {
         } else {
 
           // Déterminer la couleur en fonction de la température cible
-          if (this.targetTemperature === 'N/A') {
+          const targetTemp = typeof this.targetTemperature === 'string' ? parseFloat(this.targetTemperature) : this.targetTemperature;
+          if (this.targetTemperature === 'N/A' || isNaN(targetTemp)) {
             color = '#999999';
-          } else if (this.targetTemperature <= 18) {
+          } else if (targetTemp <= 18) {
             console.log("temp < 18")
             color = '#2196F3'; // Bleu
-          } else if (this.targetTemperature >= 21) {
+          } else if (targetTemp >= 21) {
             console.log("temp > 21")
             color = '#F44336'; // Rouge
           } else {
@@ -215,13 +216,15 @@ export class EnhancedThermostatObject extends BaseEntity {
   }
 
   protected increaseTemperature(): void {
-    const newTemp = this.targetTemperature + 0.5;
+    const currentTemp = typeof this.targetTemperature === 'string' ? parseFloat(this.targetTemperature) : this.targetTemperature;
+    const newTemp = currentTemp + 0.5;
     console.log(`[TRACE] EnhancedThermostatObject.increaseTemperature() - Nouvelle température: ${newTemp}`);
     this.setTemperature(newTemp);
   }
 
   protected decreaseTemperature(): void {
-    const newTemp = this.targetTemperature - 0.5;
+    const currentTemp = typeof this.targetTemperature === 'string' ? parseFloat(this.targetTemperature) : this.targetTemperature;
+    const newTemp = currentTemp - 0.5;
     console.log(`[TRACE] EnhancedThermostatObject.decreaseTemperature() - Nouvelle température: ${newTemp}`);
     this.setTemperature(newTemp);
   }

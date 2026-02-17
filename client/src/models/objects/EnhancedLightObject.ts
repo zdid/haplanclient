@@ -37,13 +37,8 @@ export class EnhancedLightObject extends EnhancedSwitchObject {
       brightness: this.brightness
     });
 
-    if (this.entity_id === 'light.bureau_plafonnier') {
-      console.log('[TRACE][EnhancedLightObject] element attaché au DOM avant updateDisplay?', !!this.element && document.contains(this.element));
-    }
-    
     // Ne plus stocker les valeurs à afficher (affichage simplifié)
     this.updateDisplay();
-    
     console.log(`💡 [EnhancedLightObject] updateDisplay appelé pour ${this.entity_id}`);
   }
 
@@ -117,7 +112,7 @@ export class EnhancedLightObject extends EnhancedSwitchObject {
         const oldColor = bulbIcon.style.color;
         
         bulbIcon.className = `fas fa-lightbulb`;
-        bulbIcon.style.opacity = this.isOn ? '1' : '0.3';
+        bulbIcon.style.opacity = this.isOn ? '1' : '0.5';
         bulbIcon.style.color = this.isOn ? this.colorScheme.primary : '#999999';
         
         console.log(`✅ [EnhancedLightObject] Icône mise à jour pour ${this.entity_id}`, {
